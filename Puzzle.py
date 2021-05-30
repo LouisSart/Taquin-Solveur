@@ -20,6 +20,15 @@ class Puzzle:
     def __repr__(self):
         return f"Puzzle(tiles={self.tiles})"
 
+    def __str__(self):
+        strs = []
+        for i, t in enumerate(self.tiles):
+            if self.tiles[i] == i:
+                strs.append(f"\033[32m{self.tiles[i]}")
+            else:
+                strs.append(f"\033[31m{self.tiles[i]}")
+        return f"\n{strs[0]}, {strs[1]}, {strs[2]}\n{strs[3]}, {strs[4]}, {strs[5]}\n{strs[6]}, {strs[7]}, {strs[8]}\033[m"
+
     def compute_blank_tile_pos(self):
 
         bt_pos = 0
