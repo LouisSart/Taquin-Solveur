@@ -1,6 +1,5 @@
 from Puzzle import Puzzle
 
-
 class Node:
     def __init__(self, puzzle, parent=None):
         self.puzzle = puzzle
@@ -20,6 +19,15 @@ class Node:
 
     def is_goal_state(self):
         return self.puzzle.tiles == [0,1,2,3,4,5,6,7,8]
+
+    def path(self):
+
+        path = []
+        node = self
+        while node is not None:
+            path.append(node)
+            node = node.parent
+        yield from reversed(path)
 
 if __name__ == "__main__":
     puzzle = Puzzle()
