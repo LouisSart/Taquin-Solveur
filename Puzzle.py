@@ -1,8 +1,8 @@
 import random
 # Solved puzzle scheme
-# blank tile is numbered 0
+# blank tile is labeled x
 # -----------------
-#  0  |  1  |  2  |
+#  x |  1  |  2  |
 # -----------------
 #  3  |  4  |  5  |
 # -----------------
@@ -24,10 +24,12 @@ class Puzzle:
         strs = []
         for i, t in enumerate(self.tiles):
             if self.tiles[i] == i:
-                strs.append(f"\033[32m{self.tiles[i]}")
+                strs.append(f"\033[32m{self.tiles[i] or 'x'}")
             else:
-                strs.append(f"\033[31m{self.tiles[i]}")
-        return f"\n{strs[0]}, {strs[1]}, {strs[2]}\n{strs[3]}, {strs[4]}, {strs[5]}\n{strs[6]}, {strs[7]}, {strs[8]}\033[m"
+                strs.append(f"\033[31m{self.tiles[i] or 'x'}")
+        return (f"\n{strs[0]} {strs[1]} {strs[2]}\n"
+                f"{strs[3]} {strs[4]} {strs[5]}\n"
+                f"{strs[6]} {strs[7]} {strs[8]}\033[m")
 
     def compute_blank_tile_pos(self):
 

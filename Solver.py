@@ -18,7 +18,7 @@ def breadth_first_search(root, max_depth):
                 this_layer_node_counter += 1
         last_layer_nodes = this_layer_nodes
         node_counter.append(this_layer_node_counter)
-        print(f"Depth {depth+1} completed : {this_layer_node_counter} nodes")
+        print(f"Depth {depth+1:2} completed : {this_layer_node_counter:8} nodes")
     print(f"No solution found up to depth {max_depth}")
     return None, None
 
