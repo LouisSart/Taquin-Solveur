@@ -3,6 +3,8 @@ from Puzzle import Puzzle
 
 def breadth_first_search(root, max_depth):
 
+    solution_found = False
+    solutions = []
     last_layer_nodes = [root]
     node_counter = []
     for depth in range(max_depth):
@@ -12,12 +14,16 @@ def breadth_first_search(root, max_depth):
             children = node.expand()
             for child in children:
                 if child.is_goal_state():
-                    print(f"{depth+1}-move solution found !")
-                    return child, depth+1
+                    solutions.append(child)
+                    if not solution_found:
+                        print(f"{depth+1}-move solution(s) found !")
+                        solution_found = True
                 this_layer_nodes.append(child)
                 this_layer_node_counter += 1
         last_layer_nodes = this_layer_nodes
         node_counter.append(this_layer_node_counter)
+        if solution_found:
+            return solutions, depth+1
         print(f"Depth {depth+1:2} completed : {this_layer_node_counter:8} nodes")
     print(f"No solution found up to depth {max_depth}")
     return None, None
