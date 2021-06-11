@@ -28,12 +28,3 @@ class Node:
             path.append(node)
             node = node.parent
         yield from reversed(path)
-
-if __name__ == "__main__":
-    puzzle = Puzzle()
-    puzzle.shuffle()
-    root = Node(puzzle)
-    print(root.puzzle, root.puzzle.possible_swaps())
-    successors = root.expand()
-    print([succ.puzzle for succ in successors])
-    print(root.puzzle, root.puzzle.possible_swaps())

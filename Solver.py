@@ -2,7 +2,7 @@ from Node import Node
 from Puzzle import Puzzle
 
 def breadth_first_search(root, max_depth):
-    
+
     # This routine was unable to solve this position :
     #[[7 1 5]
     #[2 8 6]
@@ -38,12 +38,3 @@ def breadth_first_search(root, max_depth):
         print(f"Depth {depth+1:2} completed : {this_layer_node_counter:8} nodes")
     print(f"No solution found up to depth {max_depth}")
     return None, None
-
-if __name__ == "__main__":
-    initial_state = Puzzle()
-    initial_state.shuffle(100)
-    print(f"Scrambled state :\n{initial_state}")
-    root = Node(initial_state)
-    solutions, move_count = breadth_first_search(root, 30)
-    for solution in solutions:
-        print([node.puzzle.bt_pos for node in solution.path()])

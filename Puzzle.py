@@ -57,11 +57,3 @@ class Puzzle:
     @property
     def is_solved(self):
         return np.array_equal(self.tiles, np.array([[0,1,2],[3,4,5],[6,7,8]]))
-
-if __name__ == "__main__":
-    puzzle = Puzzle()
-    puzzle.shuffle()
-    print(puzzle)
-    for swap in puzzle.possible_swaps():
-        puzzle.swap(swap)
-        print(puzzle)
