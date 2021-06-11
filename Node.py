@@ -7,18 +7,18 @@ class Node:
 
     def expand(self):
 
-        previous_bt_pos = self.parent.puzzle.bt_pos if self.parent is not None else None
+        previous_bt_pos = self.parent.puzzle.bt_pos if self.parent else None
         successors = []
         for pos in self.puzzle.possible_swaps():
             if pos != previous_bt_pos:
-                new_state = Puzzle([tile for tile in self.puzzle.tiles], self.puzzle.bt_pos)
+                new_state = Puzzle(self.puzzle.tiles.copy(), self.puzzle.bt_pos)
                 new_state.swap(pos)
                 successors.append(Node(new_state, parent=self))
-
         return successors
 
+    @property
     def is_goal_state(self):
-        return self.puzzle.tiles == [0,1,2,3,4,5,6,7,8]
+        return self.puzzle.is_solved
 
     def path(self):
 
