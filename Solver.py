@@ -7,8 +7,6 @@ def breadth_first_search(root, max_depth):
     #[2 8 6]
     #[4 0 3]]
 
-    visited = set()
-    avoided_counter = 0
     solution_found = False
     solutions = []
     last_layer_nodes = [root]
@@ -24,15 +22,11 @@ def breadth_first_search(root, max_depth):
                     if not solution_found:
                         print(f"{depth+1}-move solution(s) found !")
                         solution_found = True
-                if child.__repr__() not in visited:
-                    visited.add(child.__repr__())
-                    this_layer_nodes.append(child)
-                    this_layer_node_counter += 1
-                else : avoided_counter += 1
+                this_layer_nodes.append(child)
+                this_layer_node_counter += 1
         last_layer_nodes = this_layer_nodes
         node_counter.append(this_layer_node_counter)
         if solution_found:
-            print(f"{avoided_counter} nodes avoided")
             return solutions, depth+1
         print(f"Depth {depth+1:2} completed : {this_layer_node_counter:8} nodes")
     print(f"No solution found up to depth {max_depth}")
