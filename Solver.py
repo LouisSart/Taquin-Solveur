@@ -2,11 +2,6 @@ from Node import Node
 
 def breadth_first_search(root, max_depth):
 
-    # This routine was unable to solve this position :
-    #[[7 1 5]
-    #[2 8 6]
-    #[4 0 3]]
-
     solution_found = False
     solutions = []
     last_layer_nodes = [root]

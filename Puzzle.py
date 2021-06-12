@@ -14,7 +14,7 @@ class ArrayPuzzle:
 
     def __init__(self, tiles=np.array([[0,1,2],[3,4,5],[6,7,8]]), bt_pos=None):
 
-        self.tiles = tiles
+        self.tiles = np.reshape(tiles, (3,3))
         self.bt_pos = bt_pos or self.compute_blank_tile_pos()
         assert self.tiles[self.bt_pos] == 0
 
