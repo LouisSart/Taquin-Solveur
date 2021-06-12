@@ -1,4 +1,3 @@
-from Puzzle import Puzzle
 
 class Node:
     def __init__(self, puzzle, parent=None):
@@ -11,7 +10,7 @@ class Node:
         successors = []
         for pos in self.puzzle.possible_swaps():
             if pos != previous_bt_pos:
-                new_state = Puzzle(self.puzzle.tiles.copy(), self.puzzle.bt_pos)
+                new_state = self.puzzle.copy()
                 new_state.swap(pos)
                 successors.append(Node(new_state, parent=self))
         return successors

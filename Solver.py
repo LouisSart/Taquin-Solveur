@@ -1,5 +1,4 @@
 from Node import Node
-from Puzzle import Puzzle
 
 def breadth_first_search(root, max_depth):
 
