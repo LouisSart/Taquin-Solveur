@@ -22,7 +22,17 @@ class ArrayPuzzle:
         return f"Puzzle({self.tiles[0]}\n       {self.tiles[1]}\n       {self.tiles[2]})"
 
     def __str__(self):
-        return str(self.tiles)
+        is_in_place = lambda tile, pos: (3*pos[0]+pos[1]) == tile
+        strs = []
+        for i in range(3):
+            for j in range(3):
+                if is_in_place(self.tiles[i,j], (i,j)):
+                    strs.append(f"\033[32m{self.tiles[i,j] or 'x'}")
+                else:
+                    strs.append(f"\033[31m{self.tiles[i,j] or 'x'}")
+        return (f"{strs[0]} {strs[1]} {strs[2]}\n"
+                f"{strs[3]} {strs[4]} {strs[5]}\n"
+                f"{strs[6]} {strs[7]} {strs[8]}\033[m")
 
     def compute_blank_tile_pos(self):
 
@@ -78,7 +88,7 @@ class ListPuzzle:
                 strs.append(f"\033[32m{self.tiles[i] or 'x'}")
             else:
                 strs.append(f"\033[31m{self.tiles[i] or 'x'}")
-        return (f"\n{strs[0]} {strs[1]} {strs[2]}\n"
+        return (f"{strs[0]} {strs[1]} {strs[2]}\n"
                 f"{strs[3]} {strs[4]} {strs[5]}\n"
                 f"{strs[6]} {strs[7]} {strs[8]}\033[m")
 
