@@ -9,7 +9,7 @@ class Node:
 
         previous_bt_pos = self.parent.puzzle.bt_pos if self.parent else None
         successors = []
-        for pos in self.puzzle.possible_swaps():
+        for pos in self.puzzle.possible_swaps:
             if pos != previous_bt_pos:
                 new_state = self.puzzle.copy()
                 new_state.swap(pos)

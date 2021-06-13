@@ -31,13 +31,12 @@ class ArrayPuzzle:
                 if not self.tiles[i,j]:
                     return (i,j)
 
+    @property
     def possible_swaps(self):
 
         bt_pos = self.bt_pos
         all_adjacents = [(bt_pos[0]-move[0], bt_pos[1]-move[1]) for move in [(1,0),(0,1),(-1,0),(0,-1)]]
-        for adj in all_adjacents:
-            if (0<=adj[0]<3 and 0<=adj[1]<3):
-                yield adj
+        return tuple(adj for adj in all_adjacents if (0<=adj[0]<3 and 0<=adj[1]<3))
 
     def swap(self, pos):
 
@@ -46,13 +45,13 @@ class ArrayPuzzle:
 
     def shuffle(self, N=100):
 
-        # Note that this is a very bad way of shuffling the puzzle
-        # Pseudo-randomness relies on N being large enough, I would say 100 is safe
         for move in range(N):
             assert self.tiles[self.bt_pos] == 0
-            for adj in self.possible_swaps():
-                choice = random.randint(0, 1)
-                if choice : self.swap(adj)
+            poss = self.possible_swaps
+            choice = random.randint(0, len(poss)-1)
+            adj = poss[choice]
+            self.swap(adj)
+
 
     @property
     def is_solved(self):
@@ -90,6 +89,7 @@ class ListPuzzle:
             bt_pos += 1
         return bt_pos
 
+    @property
     def possible_swaps(self):
 
         bt_pos = self.bt_pos
@@ -109,7 +109,7 @@ class ListPuzzle:
 
         for move in range(N):
             assert self.tiles[self.bt_pos] == 0
-            poss = self.possible_swaps()
+            poss = self.possible_swaps
             choice = random.randint(0, len(poss)-1)
             adj = poss[choice]
             self.swap(adj)
