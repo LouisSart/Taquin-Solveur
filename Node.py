@@ -3,6 +3,7 @@ class Node:
     def __init__(self, puzzle, parent=None):
         self.puzzle = puzzle
         self.parent = parent
+        self.depth = parent.depth+1 if parent is not None else 0
 
     def expand(self):
 
@@ -19,6 +20,7 @@ class Node:
     def is_goal_state(self):
         return self.puzzle.is_solved
 
+    @property
     def path(self):
 
         path = []

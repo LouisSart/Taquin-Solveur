@@ -1,4 +1,18 @@
 from Node import Node
+import collections
+
+def Astar_search(root, h):
+
+        queue = collections.deque([root])
+        while queue:
+            queue = collections.deque(sorted(list(queue), key=lambda node: node.depth + h(node.puzzle)))
+            node = queue.popleft()
+            if node.is_goal_state:
+                return node.path
+
+            for child in node.expand():
+                queue.appendleft(child)
+
 
 def breadth_first_search(root, max_depth):
 
