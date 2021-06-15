@@ -50,6 +50,17 @@ class Puzzle:
 
         return tuple(possible_swaps)
 
+    @property
+    def is_solvable(self):
+
+        counter = 0
+        for i in range(9):
+            tile = self.tiles[i]
+            for t in self.tiles[i+1:]:
+                if tile and t:
+                    if tile > t: counter += 1
+        return counter%2 == 0
+
     def swap(self, pos):
 
         self.tiles[pos], self.tiles[self.bt_pos] = self.tiles[self.bt_pos], self.tiles[pos]
@@ -108,21 +119,14 @@ class ArrayPuzzle(Puzzle):
         bt_pos = self.bt_pos
         all_adjacents = [(bt_pos[0]-move[0], bt_pos[1]-move[1]) for move in [(1,0),(0,1),(-1,0),(0,-1)]]
         return tuple(adj for adj in all_adjacents if (0<=adj[0]<3 and 0<=adj[1]<3))
-    #
-    # def swap(self, pos):
-    #
-    #     self.tiles[pos], self.tiles[self.bt_pos] = self.tiles[self.bt_pos], self.tiles[pos]
-    #     self.bt_pos = pos
-    #
-    # def shuffle(self, N=100):
-    #
-    #     for move in range(N):
-    #         assert self.tiles[self.bt_pos] == 0
-    #         poss = self.possible_swaps
-    #         choice = random.randint(0, len(poss)-1)
-    #         adj = poss[choice]
-    #         self.swap(adj)
 
+    @property
+    def is_solvable(self):
+
+        self.tiles = np.reshape(self.tiles, (9,))
+        is_solvable = super().is_solvable
+        self.tiles = np.reshape(self.tiles, (3,3))
+        return is_solvable
 
     @property
     def is_solved(self):
