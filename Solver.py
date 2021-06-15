@@ -11,7 +11,7 @@ def Astar_search(root, h):
             queue = collections.deque(sorted(list(queue), key=lambda node: node.depth + h(node.puzzle)))
             node = queue.popleft()
             if node.is_goal_state:
-                return node.path
+                return node, node.depth
 
             for child in node.expand():
                 queue.appendleft(child)
