@@ -4,6 +4,14 @@ from Node import Node
 import time
 from heuristics import array_manhattan, list_manhattan
 
+def time_algorithms(puzzle):
+    tic = time.time()
+    astar = Astar_search(Node(puzzle), list_manhattan)
+    tac = time.time()
+    bfs = breadth_first_search(Node(puzzle), max_depth = 26, verbose=False)
+    toc = time.time()
+    return tac-tic, toc-tac
+
 def time_puzzle_implementations(position):
     tic = time.time()
     puzzle = ArrayPuzzle(position)
