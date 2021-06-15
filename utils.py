@@ -4,13 +4,26 @@ from Node import Node
 import time
 from heuristics import array_manhattan, list_manhattan
 
+def compare_algorithms(N):
+    puzzle = Puzzle()
+    scrambles = []
+    astar_times, bfs_times = [], []
+    for i in range(N):
+        puzzle.shuffle()
+        astar, bfs, move_count = time_algorithms(puzzle)
+        scrambles.append((puzzle.copy(), move_count))
+        astar_times.append(astar)
+        bfs_times.append(bfs)
+        print(f"{i+1:>5}|{astar:>20.10}|{bfs:>20.10}|{bfs/astar:>20.10}")
+    return astar_times, bfs_times, scrambles
+
 def time_algorithms(puzzle):
     tic = time.time()
     astar = Astar_search(Node(puzzle), list_manhattan)
     tac = time.time()
-    bfs = breadth_first_search(Node(puzzle), max_depth = 26, verbose=False)
+    bfs = breadth_first_search(Node(puzzle), max_depth=25, verbose=False)
     toc = time.time()
-    return tac-tic, toc-tac
+    return tac-tic, toc-tac, bfs[1]
 
 def time_puzzle_implementations(position):
     tic = time.time()
