@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from heuristics import *
 # Solved puzzle scheme
 # blank tile is labeled x
 # -----------------
@@ -31,6 +32,9 @@ class Puzzle:
         return (f"{strs[0]} {strs[1]} {strs[2]}\n"
         f"{strs[3]} {strs[4]} {strs[5]}\n"
         f"{strs[6]} {strs[7]} {strs[8]}\033[m")
+
+    def heuristic(self):
+        return manhattan(self.tiles)
 
     def compute_blank_tile_pos(self):
 
@@ -112,6 +116,9 @@ class ArrayPuzzle(Puzzle):
             for j in range(3):
                 if not self.tiles[i,j]:
                     return (i,j)
+
+    def heuristic(self):
+        return manhattan(self.tiles.reshape(9))
 
     @property
     def possible_swaps(self):

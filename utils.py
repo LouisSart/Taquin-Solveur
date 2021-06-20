@@ -2,7 +2,7 @@ from Solver import breadth_first_search, Astar_search
 from Puzzle import Puzzle, ArrayPuzzle
 from Node import Node
 import time
-from heuristics import array_manhattan, list_manhattan
+from heuristics import manhattan
 
 def compare_algorithms(N):
     puzzle = Puzzle()

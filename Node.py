@@ -17,6 +17,10 @@ class Node:
         return successors
 
     @property
+    def h(self):
+        return self.puzzle.heuristic()
+
+    @property
     def is_goal_state(self):
         return self.puzzle.is_solved
 

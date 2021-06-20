@@ -1,14 +1,14 @@
 from Node import Node
 import collections
 
-def Astar_search(root, h):
+def Astar_search(root):
 
         if not root.puzzle.is_solvable:
             print(f"Position \n{root.puzzle}\n is not solvable")
             return
         queue = collections.deque([root])
         while queue:
-            queue = collections.deque(sorted(list(queue), key=lambda node: node.depth + h(node.puzzle)))
+            queue = collections.deque(sorted(list(queue), key=lambda node: node.depth + node.h))
             node = queue.popleft()
             if node.is_goal_state:
                 return node, node.depth
