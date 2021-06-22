@@ -2,7 +2,26 @@ from Node import Node
 import collections
 from heuristics import manhattan
 
-def Astar_search(root, heuristic=manhattan, verbose=True):
+def depth_first_search(root, max_depth, heuristic=manhattan):
+
+    queue = [root]
+    root.compute_h(heuristic)
+    solutions = []
+
+    while queue:
+        node = queue.pop()
+        if node.depth + node.h <= max_depth:
+            if node.is_goal_state:
+                solutions.append(node)
+                max_depth = node.depth
+            else:
+                for child in node.expand():
+                    child.compute_h(heuristic)
+                    queue.append(child)
+
+    return solutions
+
+def Astar_search(root, heuristic=manhattan, find_all=False, verbose=True):
 
         if not root.puzzle.is_solvable:
             print(f"Position \n{root.puzzle}\n is not solvable")
