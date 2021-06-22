@@ -1,5 +1,5 @@
 from Solver import breadth_first_search, Astar_search
-from Puzzle import Puzzle, ArrayPuzzle
+from Puzzle import Puzzle
 from Node import Node
 import time
 from heuristics import manhattan
