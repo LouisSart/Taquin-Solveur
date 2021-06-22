@@ -2,7 +2,7 @@ from Node import Node
 import collections
 from heuristics import manhattan
 
-def depth_first_search(root, max_depth, heuristic=manhattan):
+def depth_first_search(root, max_depth=30, heuristic=manhattan):
 
     queue = [root]
     root.compute_h(heuristic)
@@ -19,13 +19,13 @@ def depth_first_search(root, max_depth, heuristic=manhattan):
                     child.compute_h(heuristic)
                     queue.append(child)
 
-    return solutions
+    return tuple(solutions)
 
 def Astar_search(root, heuristic=manhattan, find_all=False, verbose=True):
 
         if not root.puzzle.is_solvable:
             print(f"Position \n{root.puzzle}\n is not solvable")
-            return
+            return None
         root.compute_h(heuristic)
         queue = collections.deque([root])
         if verbose: print("A*-search : Running...")
@@ -35,7 +35,7 @@ def Astar_search(root, heuristic=manhattan, find_all=False, verbose=True):
             if node.is_goal_state:
                 optimal_depth = node.depth
                 if verbose: print(f"{optimal_depth}-move solution(s) found !")
-                return node, node.depth
+                return (node,)
 
             for child in node.expand():
                 child.compute_h(heuristic)
@@ -46,7 +46,7 @@ def breadth_first_search(root, max_depth=30, verbose=True):
 
     if not root.puzzle.is_solvable:
         print(f"Position\n{root.puzzle}\nis not solvable")
-        return None, None
+        return None
     found = False
     solutions = []
     queue = collections.deque([root])
@@ -66,7 +66,7 @@ def breadth_first_search(root, max_depth=30, verbose=True):
                 found, max_depth = True, node.depth
         for child in node.expand() : queue.append(child)
     if found:
-        return solutions, depth
+        return tuple(solutions)
         if verbose : print(f"Depth {depth:2} completed")
     if verbose : print(f"BFS: No solution found up to depth {max_depth} for position\n{root.puzzle}")
-    return None, None
+    return None
