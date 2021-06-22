@@ -1,7 +1,8 @@
 
-def manhattan(tiles):
+def manhattan(puzzle):
 
     cumdist = 0
+    tiles = puzzle.tiles
     for i in range(3):
         for j in range(3):
             tile = tiles[3*i+j]

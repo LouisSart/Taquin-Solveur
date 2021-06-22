@@ -4,6 +4,7 @@ class Node:
         self.puzzle = puzzle
         self.parent = parent
         self.depth = parent.depth+1 if parent is not None else 0
+        self.h = None
 
     def expand(self):
 
@@ -16,9 +17,8 @@ class Node:
                 successors.append(Node(new_state, parent=self))
         return successors
 
-    @property
-    def h(self):
-        return self.puzzle.heuristic()
+    def compute_h(self, heuristic):
+        self.h = heuristic(self.puzzle)
 
     @property
     def is_goal_state(self):

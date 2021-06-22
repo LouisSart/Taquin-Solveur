@@ -1,11 +1,13 @@
 from Node import Node
 import collections
+from heuristics import manhattan
 
-def Astar_search(root):
+def Astar_search(root, heuristic=manhattan):
 
         if not root.puzzle.is_solvable:
             print(f"Position \n{root.puzzle}\n is not solvable")
             return
+        root.compute_h(heuristic)
         queue = collections.deque([root])
         while queue:
             queue = collections.deque(sorted(list(queue), key=lambda node: node.depth + node.h))
@@ -14,6 +16,7 @@ def Astar_search(root):
                 return node, node.depth
 
             for child in node.expand():
+                child.compute_h(heuristic)
                 queue.appendleft(child)
 
 
