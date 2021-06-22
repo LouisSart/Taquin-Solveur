@@ -7,5 +7,5 @@ def manhattan(puzzle):
         for j in range(3):
             tile = tiles[3*i+j]
             I, J = tile//3, tile%3
-            cumdist += abs(i-I) + abs(j-J)
+            if tile: cumdist += abs(i-I) + abs(j-J)
     return cumdist
