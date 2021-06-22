@@ -2,17 +2,20 @@ from Node import Node
 import collections
 from heuristics import manhattan
 
-def Astar_search(root, heuristic=manhattan):
+def Astar_search(root, heuristic=manhattan, verbose=True):
 
         if not root.puzzle.is_solvable:
             print(f"Position \n{root.puzzle}\n is not solvable")
             return
         root.compute_h(heuristic)
         queue = collections.deque([root])
+        if verbose: print("A*-search : Running...")
         while queue:
             queue = collections.deque(sorted(list(queue), key=lambda node: node.depth + node.h))
             node = queue.popleft()
             if node.is_goal_state:
+                optimal_depth = node.depth
+                if verbose: print(f"{optimal_depth}-move solution(s) found !")
                 return node, node.depth
 
             for child in node.expand():
@@ -23,13 +26,14 @@ def Astar_search(root, heuristic=manhattan):
 def breadth_first_search(root, max_depth=30, verbose=True):
 
     if not root.puzzle.is_solvable:
-        if verbose : print(f"Position\n{root.puzzle}\nis not solvable")
+        print(f"Position\n{root.puzzle}\nis not solvable")
         return None, None
     found = False
     solutions = []
     queue = collections.deque([root])
     node = root
     depth = 0
+    if verbose: print("Breadth first search : Running...")
     while node.depth <= max_depth:
         if node.depth > depth:
             depth = node.depth
