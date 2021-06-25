@@ -2,7 +2,7 @@ from Node import Node
 import collections
 from heuristics import manhattan
 
-def depth_first_search(root, heuristic=manhattan, verbose=True):
+def depth_first_search(root, max_depth=30, heuristic=manhattan, verbose=True):
 
     if not root.puzzle.is_solvable:
         print(f"Position \n{root.puzzle}\n is not solvable")
@@ -12,7 +12,6 @@ def depth_first_search(root, heuristic=manhattan, verbose=True):
     solutions = []
     found = False
     root.compute_h(heuristic)
-    max_depth = 30
     if verbose: print("Depth first search : Running...")
 
     while queue:
