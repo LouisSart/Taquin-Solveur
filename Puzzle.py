@@ -77,6 +77,11 @@ class Puzzle:
         return Puzzle(self.shape, [line[:] for line in self.tiles], self.bt_pos)
 
     @property
+    def bt_index(self):
+        i,j = self.bt_pos
+        return self.shape[1]*i+j
+
+    @property
     def is_solved(self):
         m, n = self.shape
         return self.tiles == [[n*i+j for j in range(n)]for i in range(m)]
