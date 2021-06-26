@@ -46,7 +46,7 @@ class Puzzle:
         str = ""
         for i in range(m):
             str += " ".join(strs[i*n:(i+1)*n]) + "\n"
-        return (str + "\033[m")
+        return (str[:-1] + "\033[m")
 
     @property
     def possible_swaps(self):
