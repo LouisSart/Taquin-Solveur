@@ -69,7 +69,7 @@ def depth_first_search(root, max_depth=30, heuristic=manhattan, find_all=True, v
 
     return tuple(solutions) or estimate
 
-def Astar_search(root, heuristic=manhattan, find_all=False, verbose=True):
+def Astar_search(root, heuristic=manhattan, verbose=True):
 
         if not root.puzzle.is_solvable:
             print(f"Position \n{root.puzzle}\n is not solvable")
