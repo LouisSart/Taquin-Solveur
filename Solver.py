@@ -21,8 +21,11 @@ class Solver:
                 print([node.puzzle.bt_index for node in sol.path], f"({sol.depth})")
 
 class BFS(Solver):
-
-    def __init__(self, max_depth=30, find_all=True, verbose=True):
+    """
+    Simple breadth first search algorithm. It is very memory inefficient and
+    shouldn't be used for 3x3 puzzles over 27 moves.
+    """
+    def __init__(self, max_depth=27, find_all=True, verbose=True):
         super().__init__(max_depth=max_depth, find_all=find_all, verbose=verbose)
 
     def solve(self, puzzle):
@@ -59,7 +62,13 @@ class BFS(Solver):
         return None
 
 class Astar(Solver):
-
+    """
+    janeHJY's "A*" algorithm. It is built like a breadth-first algorithm where the node
+    queue is sorted at each iteration, but the memory occupation looks linear,
+    just like a depth-first algorithm.
+    Anyway the sorting is way too costly for paths over 30 moves and this algorithm
+    will not perform as good as a depth first search with the same heuristic
+    """
     def __init__(self, heuristic=manhattan, verbose=True):
         super().__init__(heuristic=heuristic, verbose=verbose)
 
@@ -86,7 +95,10 @@ class Astar(Solver):
                 queue.appendleft(child)
 
 class DFS(Solver):
-
+    """
+    A depth first search algorithm with a heuristic. It updates its max_depth parameter
+    every time it finds a shorter solution until it finds every optimal.
+    """
     def __init__(self, max_depth=30, heuristic=manhattan, find_all=True, verbose=True):
         super().__init__(max_depth=max_depth, heuristic=heuristic, find_all=find_all, verbose=verbose)
 
@@ -124,7 +136,12 @@ class DFS(Solver):
         return tuple(self.solutions) or estimate
 
 class Recursive_DFS(Solver):
-
+    """
+    A recursive implementation of a depth first algorithm. I haven't figured out
+    how to make it find every optimal solution, but it can still serve as an inner
+    DFS algorithm for iterative deepening A*
+    Shows to be around 20% slower than the standard DFS, which makes it pretty useless
+    """
     def __init__(self, max_depth=30, heuristic=manhattan, verbose=True):
         super().__init__(max_depth=max_depth ,heuristic=heuristic, verbose=verbose)
 
@@ -157,7 +174,10 @@ class Recursive_DFS(Solver):
         return res
 
 class IDAstar(Solver):
-
+    """
+    Korf's iterative deepening A* search algorithm. The inner DFS is set
+    to the standard one by default, but it can be changed by setting the df_solver attribute
+    """
     def __init__(self, heuristic=manhattan, verbose=True):
         super().__init__(heuristic=heuristic, verbose=verbose)
         self.df_solver = DFS(None, self.heuristic, False, False)
