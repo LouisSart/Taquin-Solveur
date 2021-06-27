@@ -6,7 +6,7 @@ class Node:
         self.depth = parent.depth+1 if parent is not None else 0
         self.h = None
 
-    def expand(self):
+    def expand(self, heuristic):
 
         previous_bt_pos = self.parent.puzzle.bt_pos if self.parent else None
         successors = []
@@ -14,8 +14,10 @@ class Node:
             if pos != previous_bt_pos:
                 new_state = self.puzzle.copy()
                 new_state.swap(pos)
-                successors.append(Node(new_state, parent=self))
-        return successors
+                child = Node(new_state, parent=self)
+                child.compute_h(heuristic)
+                successors.append(child)
+        return sorted(successors, key=lambda node: node.depth + node.h)
 
     def compute_h(self, heuristic):
         self.h = heuristic(self.puzzle)

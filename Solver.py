@@ -51,7 +51,7 @@ class BFS(Solver):
                 if not found:
                     if self.verbose : print(f"{node.depth}-move solution(s) found !")
                     found, max_depth = True, node.depth
-            for child in node.expand() : queue.append(child)
+            for child in node.expand(lambda puzzle: 0) : queue.append(child)
         if found:
             return tuple(self.solutions)
             if self.verbose : print(f"Depth {depth:2} completed")
@@ -82,8 +82,7 @@ class Astar(Solver):
                 self.solutions.append(node)
                 return tuple(self.solutions)
 
-            for child in node.expand():
-                child.compute_h(self.heuristic)
+            for child in node.expand(self.heuristic):
                 queue.appendleft(child)
 
 class DFS(Solver):
@@ -117,8 +116,7 @@ class DFS(Solver):
                         return tuple(self.solutions)
                     max_depth = node.depth
                 else:
-                    for child in node.expand():
-                        child.compute_h(self.heuristic)
+                    for child in node.expand(self.heuristic):
                         queue.append(child)
             else:
                 estimate = min(estimate, node.depth + node.h)
@@ -139,8 +137,7 @@ class Recursive_DFS(Solver):
             if node.is_goal_state:
                 return (node,)
             estimate = float('inf')
-            for child in node.expand():
-                child.compute_h(self.heuristic)
+            for child in node.expand(self.heuristic):
                 queue.append(child)
                 res = recursive_search(queue, max_depth)
                 if isinstance(res, tuple): return res
