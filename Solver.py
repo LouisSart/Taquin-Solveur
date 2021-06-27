@@ -2,119 +2,184 @@ from Node import Node
 import collections
 from heuristics import manhattan
 
-def recursive_DFS(queue, max_depth=30, heuristic=manhattan):
-    node = queue[-1]
-    if node.depth + node.h > max_depth:
-        return node.depth + node.h
-    if node.is_goal_state:
-        return (node,)
-    estimate = float('inf')
-    for child in node.expand():
-        child.compute_h(heuristic)
-        queue.append(child)
-        res = recursive_DFS(queue, max_depth)
-        if isinstance(res, tuple): return res
-        estimate = min(estimate, res)
-        queue.pop()
-    return estimate
+class Solver:
 
-def iterative_deepening_search(root, heuristic=manhattan, verbose=True):
+    def __init__(self, max_depth=None, heuristic=None, find_all=None, verbose=None):
 
-    if not root.puzzle.is_solvable:
-        print(f"Position \n{root.puzzle}\n is not solvable")
-        return None
+        if not max_depth is None: self.max_depth = max_depth
+        if not heuristic is None: self.heuristic = heuristic
+        if not find_all is None: self.find_all = find_all
+        if not verbose is None: self.verbose = verbose
+        self.solutions = []
 
-    root.compute_h(heuristic)
-    queue = [root]
-    max_depth = root.h
-    found = root.is_goal_state
-    while not found:
-        if verbose: print(f"IDA* : Searching at depth {max_depth}")
-        attempt = depth_first_search(root, max_depth, find_all=False, verbose=False)
-        if isinstance(attempt, tuple):
-            found = True
-            return attempt
-        max_depth = attempt
+    def print_solutions(self):
 
-
-def depth_first_search(root, max_depth=30, heuristic=manhattan, find_all=True, verbose=True):
-
-    if not root.puzzle.is_solvable:
-        print(f"Position \n{root.puzzle}\n is not solvable")
-        return None
-
-    queue = [root]
-    solutions = []
-    found = False
-    root.compute_h(heuristic)
-    estimate = float('inf')
-    if verbose: print("Depth first search : Running...")
-
-    while queue:
-        node = queue.pop()
-        if node.depth + node.h <= max_depth:
-            if node.is_goal_state:
-                if verbose and not found: print(f"{node.depth}-move solution(s) found !")
-                found = True
-                solutions.append(node)
-                if not find_all:
-                    return tuple(solutions)
-                max_depth = node.depth
-            else:
-                for child in node.expand():
-                    child.compute_h(heuristic)
-                    queue.append(child)
+        if not self.solutions:
+            print("Solver.print_solutions : No solution found")
         else:
-            estimate = min(estimate, node.depth + node.h)
+            for sol in self.solutions:
+                print([node.puzzle.bt_index for node in sol.path], f"({sol.depth})")
 
-    return tuple(solutions) or estimate
+class BFS(Solver):
 
-def Astar_search(root, heuristic=manhattan, verbose=True):
+    def __init__(self, max_depth=30, find_all=True, verbose=True):
+        super().__init__(max_depth=max_depth, find_all=find_all, verbose=verbose)
 
-        if not root.puzzle.is_solvable:
+    def solve(self, puzzle):
+
+        if not puzzle.is_solvable:
+            print(f"Position\n{root.puzzle}\nis not solvable")
+            return None
+
+        root = Node(puzzle)
+        found = False
+        self.solutions = []
+        max_depth = self.max_depth
+        queue = collections.deque([root])
+        node = root
+        depth = 0
+        if self.verbose: print("Breadth first search : Running...")
+        while node.depth <= max_depth:
+            if node.depth > depth:
+                depth = node.depth
+                if self.verbose : print(f"Searching at depth {depth:>5}")
+            node = queue.popleft()
+
+            if node.is_goal_state:
+                self.solutions.append(node)
+                if not self.find_all : return tuple(self.solutions)
+                if not found:
+                    if self.verbose : print(f"{node.depth}-move solution(s) found !")
+                    found, max_depth = True, node.depth
+            for child in node.expand() : queue.append(child)
+        if found:
+            return tuple(self.solutions)
+            if self.verbose : print(f"Depth {depth:2} completed")
+        if self.verbose : print(f"BFS: No solution found up to depth {max_depth} for position:\n{root.puzzle}")
+        return None
+
+class Astar(Solver):
+
+    def __init__(self, heuristic=manhattan, verbose=True):
+        super().__init__(heuristic=heuristic, verbose=verbose)
+
+    def solve(self, puzzle):
+
+        if not puzzle.is_solvable:
             print(f"Position \n{root.puzzle}\n is not solvable")
             return None
-        root.compute_h(heuristic)
+
+        root = Node(puzzle)
+        self.solutions = []
+        root.compute_h(self.heuristic)
         queue = collections.deque([root])
-        if verbose: print("A* search : Running...")
+        if self.verbose: print("A* search : Running...")
         while queue:
             queue = collections.deque(sorted(list(queue), key=lambda node: node.depth + node.h))
             node = queue.popleft()
             if node.is_goal_state:
-                optimal_depth = node.depth
-                if verbose: print(f"{optimal_depth}-move solution(s) found !")
-                return (node,)
+                if self.verbose: print(f"{node.depth}-move solution(s) found !")
+                self.solutions.append(node)
+                return tuple(self.solutions)
 
             for child in node.expand():
-                child.compute_h(heuristic)
+                child.compute_h(self.heuristic)
                 queue.appendleft(child)
 
+class DFS(Solver):
 
-def breadth_first_search(root, max_depth=30, verbose=True):
+    def __init__(self, max_depth=30, heuristic=manhattan, find_all=True, verbose=True):
+        super().__init__(max_depth=max_depth, heuristic=heuristic, find_all=find_all, verbose=verbose)
 
-    if not root.puzzle.is_solvable:
-        print(f"Position\n{root.puzzle}\nis not solvable")
-        return None
-    found = False
-    solutions = []
-    queue = collections.deque([root])
-    node = root
-    depth = 0
-    if verbose: print("Breadth first search : Running...")
-    while node.depth <= max_depth:
-        if node.depth > depth:
-            depth = node.depth
-            if verbose : print(f"Searching at depth {depth:>5}")
-        node = queue.popleft()
+    def solve(self, puzzle):
 
-        if node.is_goal_state:
-            solutions.append(node)
-            if not found:
-                if verbose : print(f"{node.depth}-move solution(s) found !")
-                found, max_depth = True, node.depth
-        for child in node.expand() : queue.append(child)
-    if found:
-        return tuple(solutions)
-        if verbose : print(f"Depth {depth:2} completed")
-    if verbose : print(f"BFS: No solution found up to depth {max_depth} for position\n{root.puzzle}")
-    return None
+        if not puzzle.is_solvable:
+            print(f"Position \n{root.puzzle}\n is not solvable")
+            return None
+
+        root = Node(puzzle)
+        queue = [root]
+        self.solutions = []
+        found = False
+        root.compute_h(self.heuristic)
+        estimate = float('inf')
+        max_depth = self.max_depth
+        if self.verbose: print("Depth first search : Running...")
+
+        while queue:
+            node = queue.pop()
+            if node.depth + node.h <= max_depth:
+                if node.is_goal_state:
+                    if self.verbose and not found: print(f"{node.depth}-move solution(s) found !")
+                    found = True
+                    self.solutions.append(node)
+                    if not self.find_all:
+                        return tuple(self.solutions)
+                    max_depth = node.depth
+                else:
+                    for child in node.expand():
+                        child.compute_h(self.heuristic)
+                        queue.append(child)
+            else:
+                estimate = min(estimate, node.depth + node.h)
+
+        return tuple(self.solutions) or estimate
+
+class Recursive_DFS(Solver):
+
+    def __init__(self, max_depth=30, heuristic=manhattan, verbose=True):
+        super().__init__(max_depth=max_depth ,heuristic=heuristic, verbose=verbose)
+
+    def solve(self, puzzle):
+
+        def recursive_search(queue, max_depth):
+            node = queue[-1]
+            if node.depth + node.h > max_depth:
+                return node.depth + node.h
+            if node.is_goal_state:
+                return (node,)
+            estimate = float('inf')
+            for child in node.expand():
+                child.compute_h(self.heuristic)
+                queue.append(child)
+                res = recursive_search(queue, max_depth)
+                if isinstance(res, tuple): return res
+                estimate = min(estimate, res)
+                queue.pop()
+            return estimate
+
+        root = Node(puzzle)
+        root.compute_h(self.heuristic)
+        queue = [root]
+        self.solutions = []
+        if self.verbose : print("Recursive_DFS : Running...")
+        res = recursive_search(queue, self.max_depth)
+        if isinstance(res, tuple):
+            if self.verbose : print("Solution found !")
+            self.solutions = res
+        return res
+
+class IDAstar(Solver):
+
+    def __init__(self, heuristic=manhattan, verbose=True):
+        super().__init__(heuristic=heuristic, verbose=verbose)
+        self.df_solver = DFS(None, self.heuristic, False, False)
+
+    def solve(self, puzzle):
+
+        if not puzzle.is_solvable:
+            print(f"Position \n{root.puzzle}\n is not solvable")
+            return None
+
+        root = Node(puzzle)
+        root.compute_h(self.heuristic)
+        self.df_solver.max_depth = root.h
+        found = root.is_goal_state
+        while not found:
+            if self.verbose: print(f"IDA* : Searching at depth {self.df_solver.max_depth}")
+            attempt = self.df_solver.solve(puzzle)
+            if isinstance(attempt, tuple):
+                found = True
+                self.solutions = attempt
+                return attempt
+            self.df_solver.max_depth = attempt
