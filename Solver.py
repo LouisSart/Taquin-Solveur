@@ -2,27 +2,27 @@ from Node import Node
 import collections
 from heuristics import manhattan
 
+def recursive_DFS(queue, max_depth=30, heuristic=manhattan):
+    node = queue[-1]
+    if node.depth + node.h > max_depth:
+        return node.depth + node.h
+    if node.is_goal_state:
+        return (node,)
+    estimate = float('inf')
+    for child in node.expand():
+        child.compute_h(heuristic)
+        queue.append(child)
+        res = recursive_DFS(queue, max_depth)
+        if isinstance(res, tuple): return res
+        estimate = min(estimate, res)
+        queue.pop()
+    return estimate
+
 def iterative_deepening_search(root, heuristic=manhattan, verbose=True):
 
     if not root.puzzle.is_solvable:
         print(f"Position \n{root.puzzle}\n is not solvable")
         return None
-
-    def recursive_DFS(queue, max_depth):
-        node = queue[-1]
-        if node.depth + node.h > max_depth:
-            return node.depth + node.h
-        if node.is_goal_state:
-            return node
-        estimate = float('inf')
-        for child in node.expand():
-            child.compute_h(heuristic)
-            queue.append(child)
-            res = recursive_DFS(queue, max_depth)
-            if isinstance(res, Node): return res
-            estimate = min(estimate, res)
-            queue.pop()
-        return estimate
 
     root.compute_h(heuristic)
     queue = [root]
@@ -30,14 +30,14 @@ def iterative_deepening_search(root, heuristic=manhattan, verbose=True):
     found = root.is_goal_state
     while not found:
         if verbose: print(f"IDA* : Searching at depth {max_depth}")
-        attempt = recursive_DFS(queue, max_depth)
-        if isinstance(attempt, Node):
+        attempt = depth_first_search(root, max_depth, find_all=False, verbose=False)
+        if isinstance(attempt, tuple):
             found = True
-            return (attempt,)
+            return attempt
         max_depth = attempt
 
 
-def depth_first_search(root, max_depth=30, heuristic=manhattan, verbose=True):
+def depth_first_search(root, max_depth=30, heuristic=manhattan, find_all=True, verbose=True):
 
     if not root.puzzle.is_solvable:
         print(f"Position \n{root.puzzle}\n is not solvable")
@@ -47,6 +47,7 @@ def depth_first_search(root, max_depth=30, heuristic=manhattan, verbose=True):
     solutions = []
     found = False
     root.compute_h(heuristic)
+    estimate = float('inf')
     if verbose: print("Depth first search : Running...")
 
     while queue:
@@ -56,13 +57,17 @@ def depth_first_search(root, max_depth=30, heuristic=manhattan, verbose=True):
                 if verbose and not found: print(f"{node.depth}-move solution(s) found !")
                 found = True
                 solutions.append(node)
+                if not find_all:
+                    return tuple(solutions)
                 max_depth = node.depth
             else:
                 for child in node.expand():
                     child.compute_h(heuristic)
                     queue.append(child)
+        else:
+            estimate = min(estimate, node.depth + node.h)
 
-    return tuple(solutions)
+    return tuple(solutions) or estimate
 
 def Astar_search(root, heuristic=manhattan, find_all=False, verbose=True):
 
