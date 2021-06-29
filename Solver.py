@@ -178,9 +178,9 @@ class IDAstar(Solver):
     Korf's iterative deepening A* search algorithm. The inner DFS is set
     to the standard one by default, but it can be changed by setting the df_solver attribute
     """
-    def __init__(self, heuristic=manhattan, verbose=True):
-        super().__init__(heuristic=heuristic, verbose=verbose)
-        self.df_solver = DFS(None, self.heuristic, False, False)
+    def __init__(self, heuristic=manhattan, find_all=True, verbose=True):
+        super().__init__(heuristic=heuristic, find_all=find_all, verbose=verbose)
+        self.df_solver = DFS(None, self.heuristic, find_all, False)
 
     def solve(self, puzzle):
 
