@@ -200,3 +200,4 @@ class IDAstar(Solver):
                 self.solutions = attempt
                 return attempt
             self.df_solver.max_depth = attempt
+        return tuple([root])
