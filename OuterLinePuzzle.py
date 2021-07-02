@@ -1,6 +1,4 @@
-from Solver import *
 from Puzzle import Puzzle
-import cProfile
 
 class OuterLinePuzzle(Puzzle):
 
@@ -62,24 +60,3 @@ class OuterLinePuzzle(Puzzle):
     @property
     def is_solvable(self):
         return True
-
-def outer_line_manhattan(puzzle):
-    m, n = puzzle.shape
-    counter = 0
-    for i, pos in enumerate(puzzle.pos[1:m]):
-        I, J = pos
-        counter += sum((abs(I-i),abs(n-1-J)))
-    for j, pos in enumerate(puzzle.pos[m:]):
-        I, J = pos
-        counter += sum((abs(m-1-I),abs(j-J)))
-    return counter
-
-
-if __name__ == "__main__":
-    puzzle = OuterLinePuzzle(shape=(3,4))
-    puzzle.shuffle(300)
-    print(puzzle)
-    solver=IDAstar(heuristic=outer_line_manhattan)
-    # cProfile.run("solver.solve(puzzle)")
-    solver.solve(puzzle)
-    solver.print_solutions()
