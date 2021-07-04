@@ -1,5 +1,5 @@
 from Puzzle import Puzzle
-from heuristics import manhattan, outer_line_manhattan
+from heuristics import manhattan, outer_line_manhattan, OuterLineHeuristic, max_combo
 import time
 from Solver import IDAstar, Astar, BFS, DFS, Recursive_DFS
 import yaml
@@ -99,4 +99,12 @@ if __name__ == "__main__":
     run_solvers(
         easy44,
         IDAstar(),
+    )
+    print("\nRunning IDA* for h in (Outer line, Manhattan, max(Outer line, Manhattan)) :")
+    print(hard)
+    run_solvers(
+        hard,
+        IDAstar(heuristic=OuterLineHeuristic()),
+        IDAstar(heuristic=manhattan),
+        IDAstar(heuristic=max_combo(OuterLineHeuristic(), manhattan)),
     )
