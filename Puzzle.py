@@ -69,12 +69,20 @@ class Puzzle:
         N += random.randint(0,1)
         for move in range(N):
             poss = self.possible_swaps
-            choice = random.randint(0, len(poss)-1)
-            adj = poss[choice]
-            self.swap(adj)
+            choice = random.choice(poss)
+            self.swap(choice)
 
     def copy(self):
         return Puzzle(self.shape, [line[:] for line in self.tiles], self.bt_pos)
+
+    def random_state(self):
+        m, n = self.shape
+        scramble = [tile for tile in range(m*n)]
+        random.shuffle(scramble)
+        self.tiles = [[scramble[n*i+j] for j in range(n)] for i in range(m)]
+        self.bt_pos = self.compute_blank_tile_pos()
+        if not self.is_solvable:
+            self.random_state()
 
     @property
     def bt_index(self):
