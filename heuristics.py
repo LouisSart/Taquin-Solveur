@@ -1,5 +1,10 @@
 import pickle
 
+def max_combo(*heuristics):
+    def h(puzzle):
+        return max((h(puzzle) for h in heuristics))
+    return h
+
 def manhattan(puzzle):
 
     cumdist = 0
