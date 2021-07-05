@@ -1,6 +1,6 @@
-from Node import Node
 import collections
-from heuristics import manhattan
+from .node import Node
+from .heuristics import manhattan
 
 class Solver:
 

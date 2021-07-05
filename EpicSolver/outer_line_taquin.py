@@ -1,6 +1,6 @@
-from Puzzle import Puzzle
+from .taquin import Taquin
 
-class OuterLinePuzzle(Puzzle):
+class OuterLineTaquin(Taquin):
 
     def __init__(self, shape=(3,3), pos=None):
 
@@ -13,7 +13,7 @@ class OuterLinePuzzle(Puzzle):
         else: self.pos = pos
 
     def __repr__(self):
-        return f"OuterLinePuzzle(pos={self.pos})"
+        return f"OuterLineTaquin(pos={self.pos})"
 
     def __str__(self):
         return self.__repr__()
@@ -41,7 +41,7 @@ class OuterLinePuzzle(Puzzle):
                     self.pos[0], self.pos[k] = self.pos[k], self.pos[0]
 
     def copy(self):
-        return OuterLinePuzzle(self.shape, self.pos[:])
+        return OuterLineTaquin(self.shape, self.pos[:])
 
     @property
     def bt_index(self):

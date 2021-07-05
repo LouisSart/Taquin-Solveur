@@ -1,15 +1,13 @@
-from Puzzle import Puzzle
-from heuristics import manhattan, outer_line_manhattan, OuterLineHeuristic, max_combo
-import time
-from Solver import IDAstar, Astar, BFS, DFS, Recursive_DFS
-import yaml
-import itertools as it
-from OuterLinePuzzle import OuterLinePuzzle
+import time, yaml, itertools as it
+from EpicSolver.heuristics import *
+from EpicSolver.solver import *
+from EpicSolver.taquin import *
+from EpicSolver.outer_line_taquin import *
 
-easy = Puzzle((3,3), [[4, 3, 2], [1, 7, 5], [6, 8, 0]]) # Has two optimal solutions in 8 moves
-hard = Puzzle((3,3), [[4, 7, 6], [5, 1, 8], [0, 3, 2]]) # Has nine optimal solutions in 28 moves
-hard44 = Puzzle((4,4), [[2, 4, 7, 8], [10, 13, 6, 3], [5, 0, 1, 14], [12, 11, 9, 15]]) # Has five optimal solutions in 45 moves
-easy44 = Puzzle((4,4), [[14, 1, 9, 6], [4, 8, 12, 5], [7, 2, 3, 0], [10, 11, 13, 15]]) # Has one optimal solution in 45 moves
+easy = Taquin((3,3), [[4, 3, 2], [1, 7, 5], [6, 8, 0]]) # Has two optimal solutions in 8 moves
+hard = Taquin((3,3), [[4, 7, 6], [5, 1, 8], [0, 3, 2]]) # Has nine optimal solutions in 28 moves
+hard44 = Taquin((4,4), [[2, 4, 7, 8], [10, 13, 6, 3], [5, 0, 1, 14], [12, 11, 9, 15]]) # Has five optimal solutions in 45 moves
+easy44 = Taquin((4,4), [[14, 1, 9, 6], [4, 8, 12, 5], [7, 2, 3, 0], [10, 11, 13, 15]]) # Has one optimal solution in 45 moves
 
 def time_solvers(puzzles, *solvers):
 
@@ -48,7 +46,7 @@ def build_outer_line_table():
             pos.append((j,i))
         pos[1], pos[3] = pos[3], pos[1]
         pos[2], pos[4] = pos[4], pos[2]
-        return OuterLinePuzzle(shape=puzzle.shape, pos=pos)
+        return OuterLineTaquin(shape=puzzle.shape, pos=pos)
 
     h_table = {}
     counter = 0
@@ -62,7 +60,7 @@ def build_outer_line_table():
                 if idx != -1:
                     pos[idx] = i,j
 
-        puzzle = OuterLinePuzzle(shape=(3,3), pos=pos)
+        puzzle = OuterLineTaquin(shape=(3,3), pos=pos)
         label = tuple(puzzle.pos).__hash__()
         if label not in h_table:
             solver = IDAstar(heuristic=outer_line_manhattan, verbose=False)

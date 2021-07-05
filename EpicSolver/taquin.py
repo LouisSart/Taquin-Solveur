@@ -12,7 +12,7 @@ import numpy as np
 #  6  |  7  |  8  |
 # -----------------
 
-class Puzzle:
+class Taquin:
 
     def __init__(self, shape=(3,3), tiles=None, bt_pos=None):
 
@@ -32,7 +32,7 @@ class Puzzle:
         return bt_pos
 
     def __repr__(self):
-        return f"Puzzle(tiles={self.tiles})"
+        return f"Taquin(tiles={self.tiles})"
 
     def __str__(self):
         strs = []
@@ -73,7 +73,7 @@ class Puzzle:
             self.swap(choice)
 
     def copy(self):
-        return Puzzle(self.shape, [line[:] for line in self.tiles], self.bt_pos)
+        return Taquin(self.shape, [line[:] for line in self.tiles], self.bt_pos)
 
     def random_state(self):
         m, n = self.shape
