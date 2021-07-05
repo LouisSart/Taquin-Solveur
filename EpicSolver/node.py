@@ -1,22 +1,22 @@
 
 class Node:
-    def __init__(self, puzzle, parent=None):
+    def __init__(self, puzzle, parent=None, move=None):
         self.puzzle = puzzle
         self.parent = parent
-        self.depth = parent.depth+1 if parent is not None else 0
         self.h = None
+        self.depth = parent.depth+1 if parent is not None else 0
+        self.move = move
 
     def expand(self, heuristic):
 
-        previous_bt_pos = self.parent.puzzle.bt_pos if self.parent else None
+        previous = self.move
         successors = []
-        for pos in self.puzzle.possible_swaps:
-            if pos != previous_bt_pos:
-                new_state = self.puzzle.copy()
-                new_state.swap(pos)
-                child = Node(new_state, parent=self)
-                child.compute_h(heuristic)
-                successors.append(child)
+        for move in self.puzzle.allowed_moves(previous):
+            new_state = self.puzzle.copy()
+            new_state.apply(move)
+            child = Node(new_state, parent=self, move=move)
+            child.compute_h(heuristic)
+            successors.append(child)
         return sorted(successors, key=lambda node: node.depth + node.h)
 
     def compute_h(self, heuristic):
@@ -34,4 +34,4 @@ class Node:
         while node is not None:
             path.append(node)
             node = node.parent
-        yield from reversed(path)
+        return tuple(reversed(path))

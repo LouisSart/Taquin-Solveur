@@ -18,7 +18,7 @@ class Solver:
             print("Solver.print_solutions : No solution found")
         else:
             for sol in self.solutions:
-                print([node.puzzle.bt_index for node in sol.path], f"({sol.depth})")
+                print(*(node.move for node in sol.path[1:]), f"({sol.depth})")
 
 class BFS(Solver):
     """

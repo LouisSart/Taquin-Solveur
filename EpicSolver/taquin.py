@@ -12,6 +12,25 @@ import numpy as np
 #  6  |  7  |  8  |
 # -----------------
 
+class TaquinMove:
+    def __init__(self, slide, repr, forbidden_next=None):
+        self.slide = slide
+        self.repr = repr
+        self.forbidden_next = forbidden_next
+    def __str__(self):
+        return self.repr
+    def __getitem__(self, key):
+        return self.slide[key]
+
+left  = TaquinMove((0,-1),"L")
+right = TaquinMove((0,1),"R", (left,))
+left.forbidden_next = (right,)
+up    = TaquinMove((-1,0),"U")
+down  = TaquinMove((1,0),"D", (up,))
+up.forbidden_next = (down,)
+
+taquin_moves = (left, right, up, down)
+
 class Taquin:
 
     def __init__(self, shape=(3,3), tiles=None, bt_pos=None):
@@ -48,21 +67,23 @@ class Taquin:
             str += " ".join(strs[i*n:(i+1)*n]) + "\n"
         return (str[:-1] + "\033[m")
 
-    @property
-    def possible_swaps(self):
+    def allowed_moves(self, previous):
 
         bt_pos = self.bt_pos
-        all_adjacents = [(bt_pos[0]-move[0], bt_pos[1]-move[1]) for move in [(1,0),(0,1),(-1,0),(0,-1)]]
-        possible_adjacents = [adj for adj in all_adjacents if (0<=adj[0]<self.shape[0] and 0<=adj[1]<self.shape[1])]
+        forbidden = previous.forbidden_next if previous is not None else ()
+        possible_moves = [move for move in taquin_moves if (
+                0<=bt_pos[0]+move[0]<self.shape[0] and
+                0<=bt_pos[1]+move[1]<self.shape[1] and
+                move not in forbidden)]
+        return tuple(possible_moves)
 
-        return tuple(possible_adjacents)
-
-    def swap(self, pos):
+    def apply(self, move):
 
         i, j = self.bt_pos
-        I, J = pos
+        si, sj = move.slide
+        I, J = i+si, j+sj
         self.tiles[I][J], self.tiles[i][j] = self.tiles[i][j], self.tiles[I][J]
-        self.bt_pos = pos
+        self.bt_pos = (I, J)
 
     def shuffle(self, N=100):
 
