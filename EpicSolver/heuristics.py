@@ -20,7 +20,7 @@ def manhattan(puzzle):
 class OuterLineHeuristic():
 
     def __init__(self):
-        with open("/media/epicier/Documents/Rubik's Cube/my_solver/tables/outer_line_table.pkl", "rb") as f:
+        with open("tables/outer_line_table.pkl", "rb") as f:
             self.outer_line_dict = pickle.load(f)
         self.idx = {0:0,2:1,5:2,6:3,7:4,8:5}
         self.pos = [0,0,0,0,0,0]
@@ -33,18 +33,3 @@ class OuterLineHeuristic():
                 if tile in (0,2,5,6,7,8):
                     self.pos[self.idx[tile]] = (i,j)
         return self.outer_line_dict[tuple(self.pos).__hash__()]
-
-def outer_line_manhattan(puzzle):
-    """
-    manhattan distance for an m*n outer line subpuzzle
-    Argument puzzle should be an OuterLineTaquin instance
-    """
-    m, n = puzzle.shape
-    counter = 0
-    for i, pos in enumerate(puzzle.pos[1:m]):
-        I, J = pos
-        counter += sum((abs(I-i),abs(n-1-J)))
-    for j, pos in enumerate(puzzle.pos[m:]):
-        I, J = pos
-        counter += sum((abs(m-1-I),abs(j-J)))
-    return counter
