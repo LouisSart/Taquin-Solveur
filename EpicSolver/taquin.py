@@ -88,10 +88,11 @@ class Taquin:
     def shuffle(self, N=100):
 
         N += random.randint(0,1)
-        for move in range(N):
-            poss = self.possible_swaps
-            choice = random.choice(poss)
-            self.swap(choice)
+        move = None
+        for i in range(N):
+            choice = random.choice(self.allowed_moves(move))
+            self.apply(choice)
+            move = choice
 
     def copy(self):
         return Taquin(self.shape, [line[:] for line in self.tiles], self.bt_pos)
