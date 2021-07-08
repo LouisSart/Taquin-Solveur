@@ -31,7 +31,7 @@ class BFS(Solver):
     def solve(self, puzzle):
 
         if not puzzle.is_solvable:
-            print(f"Position\n{root.puzzle}\nis not solvable")
+            print(f"Position\n{puzzle}\nis not solvable")
             return None
 
         root = Node(puzzle)
@@ -75,7 +75,7 @@ class Astar(Solver):
     def solve(self, puzzle):
 
         if not puzzle.is_solvable:
-            print(f"Position \n{root.puzzle}\n is not solvable")
+            print(f"Position \n{puzzle}\n is not solvable")
             return None
 
         root = Node(puzzle)
@@ -105,7 +105,7 @@ class DFS(Solver):
     def solve(self, puzzle):
 
         if not puzzle.is_solvable:
-            print(f"Position \n{root.puzzle}\n is not solvable")
+            print(f"Position \n{puzzle}\n is not solvable")
             return None
 
         root = Node(puzzle)
@@ -191,7 +191,7 @@ class IDAstar(Solver):
     def solve(self, puzzle):
 
         if not puzzle.is_solvable:
-            print(f"Position \n{root.puzzle}\n is not solvable")
+            print(f"Position \n{puzzle}\n is not solvable")
             return None
 
         root = Node(puzzle)
