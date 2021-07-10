@@ -19,35 +19,18 @@ def build_22CO_table():
     s = {}
     counter = 0
 
-    for perm in it.permutations([2,1,0,0,0,0,0]):
-        actual_CO = perm[:3] + (0,) + perm[3:]
-        if actual_CO.__hash__() not in s:
-            co_puzzle = COCube2((np.array(actual_CO), np.array(actual_CO)))
-            co_subsolution = solver.solve(co_puzzle)
-            s.update({actual_CO.__hash__():co_subsolution[-1].depth})
-            solver.print_solutions()
-        counter += 1
-        print(counter, "/ 15120")
-
-    for perm in it.permutations([2,1,2,1,0,0,0]):
-        actual_CO = perm[:3] + (0,) + perm[3:]
-        if actual_CO.__hash__() not in s:
-            co_puzzle = COCube2((np.array(actual_CO), np.array(actual_CO)))
-            co_subsolution = solver.solve(co_puzzle)
-            s.update({actual_CO.__hash__():co_subsolution[-1].depth})
-            solver.print_solutions()
-        counter += 1
-        print(counter, "/ 15120")
-
-    for perm in it.permutations([2,1,2,1,2,1,0]):
-        actual_CO = perm[:3] + (0,) + perm[3:]
-        if actual_CO.__hash__() not in s:
-            co_puzzle = COCube2((np.array(actual_CO), np.array(actual_CO)))
-            co_subsolution = solver.solve(co_puzzle)
-            s.update({actual_CO.__hash__():co_subsolution[-1].depth})
-            solver.print_solutions()
-        counter += 1
-        print(counter, "/ 15120")
+    for i0 in range(3):
+        for i1 in range(3):
+            for i2 in range(3):
+                for i3 in range(3):
+                    for i4 in range(3):
+                        for i5 in range(3):
+                            co_tuple = (i0,i1,i2,0,i3,i4,i5) + (-(i0+i1+i2+i3+i4+i5)%3,)
+                            puzzle = COCube2((np.array([0,1,2,3,4,5,6,7]), np.array(co_tuple)))
+                            sol = solver.solve(puzzle)[-1]
+                            s.update({co_tuple.__hash__():sol.depth})
+                            counter+=1
+                            print(counter, "/ 729", sol.depth)
 
     with open("22CO_table.pkl", "wb") as f:
         pickle.dump(s, f)

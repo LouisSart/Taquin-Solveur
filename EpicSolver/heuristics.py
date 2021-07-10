@@ -33,3 +33,12 @@ class OuterLineHeuristic():
                 if tile in (0,2,5,6,7,8):
                     self.pos[self.idx[tile]] = (i,j)
         return self.outer_line_dict[tuple(self.pos).__hash__()]
+
+class CO22Heuristic():
+
+    def __init__(self):
+        with open("tables/22CO_table.pkl", "rb") as f:
+            self.CO_dict = pickle.load(f)
+
+    def __call__(self, puzzle):
+        return self.CO_dict[tuple(puzzle.CO).__hash__()]
