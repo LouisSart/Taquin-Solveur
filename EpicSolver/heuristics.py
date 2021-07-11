@@ -42,3 +42,12 @@ class CO22Heuristic():
 
     def __call__(self, puzzle):
         return self.CO_dict[tuple(puzzle.CO).__hash__()]
+
+class CP22Heuristic():
+
+    def __init__(self):
+        with open("tables/22CP_table.pkl", "rb") as f:
+            self.CP_dict = pickle.load(f)
+
+    def __call__(self, puzzle):
+        return self.CP_dict[tuple(puzzle.CP).__hash__()]

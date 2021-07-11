@@ -3,6 +3,32 @@ from .taquin import Taquin
 from .solver import IDAstar
 from .cube2 import Cube2
 
+def build_22CP_table():
+    """
+    suboptimal way of generating the corner permutation optimals
+    for 2x2x2 cubes
+    """
+    class CPCube2(Cube2):
+        @property
+        def is_solved(self):
+            return np.array_equal(self.CP, np.array([0, 1, 2, 3, 4, 5, 6, 7]))
+        def copy(self):
+            return CPCube2((self.CP, self.CO))
+
+    solver = IDAstar(find_all=False, heuristic=lambda puzzle:0, verbose=False)
+    s = {}
+
+    for perm in it.permutations([0,1,2,4,5,6,7]):
+        actual_cp = perm[0:3] + (3,) + perm[3:]
+        puzzle = CPCube2((np.array(actual_cp), np.array([0,0,0,0,0,0,0,0])))
+        sol = solver.solve(puzzle)[-1]
+        s.update({actual_cp.__hash__():sol.depth})
+        print(len(s), '/ 5040', sol.depth)
+
+    with open("22CP_table.pkl", "wb") as f:
+        pickle.dump(s, f)
+
+
 def build_22CO_table():
     """
     suboptimal way of generating the corner orientation optimals
