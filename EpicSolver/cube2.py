@@ -36,26 +36,8 @@ class CubeState2:
         return CubeState2((CP, CO))
 
     def isSolvable(self):
+        return np.remainder(np.sum(self.CO),3)==0
 
-        if not np.remainder(np.sum(self.CO),3)==0: return False
-
-        checked_corners=[]
-        k=0
-        n_corner_translations=0
-        while len(checked_corners) < 8:
-            if self.CP[k] in checked_corners :
-                k+=1
-            else:
-                cycle_start=k
-                i=self.CP[k]
-                checked_corners += [k]
-                while not i==cycle_start:
-                    n_corner_translations+=1
-                    checked_corners += [i]
-                    i=self.CP[i]
-
-        if not (-1)**n_corner_translations==1 : return False
-        return True
 
     def mult(self, other):
         ''' Multiplication en place. Mêmes performances que l'autre... '''
