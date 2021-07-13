@@ -223,11 +223,14 @@ class Cube3(CubeState):
     def shuffle(self, N=100):
 
         previous = None
+        scramble = []
         for move in range(N):
             poss = self.allowed_moves(previous)
             choice = random.choice(poss)
             self.apply(choice)
             previous = choice
+            scramble.append(choice)
+        return scramble
 
     @property
     def is_solved(self):
@@ -241,4 +244,3 @@ class Cube3(CubeState):
 
     def is_solvable(self):
         return self.isSolvable()
-        return True
