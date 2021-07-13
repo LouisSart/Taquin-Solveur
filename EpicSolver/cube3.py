@@ -173,9 +173,9 @@ L_turn  = CubeState((np.array([4, 1, 2, 0, 7, 5, 6, 3]),
 L = CubeMove(L_turn, "L")
 L2 = CubeMove(L_turn*L_turn, "L2")
 L3 = CubeMove(L_turn*L_turn*L_turn, "L'")
-L.forbidden_next = (L, L2, L3)
-L2.forbidden_next = (L, L3, L2)
-L3.forbidden_next = (L, L2, L3)
+L.forbidden_next = (L, L2, L3, R, R2, R3)
+L2.forbidden_next = (L, L3, L2, R, R2, R3)
+L3.forbidden_next = (L, L2, L3, R, R2, R3)
 
 # Définition de D, D', D2
 
@@ -186,9 +186,9 @@ D_turn  = CubeState((np.array([3, 0, 1, 2, 4, 5, 6, 7]),
 D = CubeMove(D_turn, "D")
 D2 = CubeMove(D_turn*D_turn, "D2")
 D3 = CubeMove(D_turn*D_turn*D_turn, "D'")
-D.forbidden_next = (D, D2, D3)
-D2.forbidden_next = (D, D3, D2)
-D3.forbidden_next = (D, D2, D3)
+D.forbidden_next = (D, D2, D3, U, U2, U3)
+D2.forbidden_next = (D, D3, D2, U, U2, U3)
+D3.forbidden_next = (D, D2, D3, U, U2, U3)
 
 # Définition de B, B', B2
 
@@ -199,11 +199,11 @@ B_turn  = CubeState((np.array([0, 1, 3, 7, 4, 5, 2, 6]),
 B = CubeMove(B_turn, "B")
 B2 = CubeMove(B_turn*B_turn, "B2")
 B3 = CubeMove(B_turn*B_turn*B_turn, "B'")
-B.forbidden_next = (B, B2, B3)
-B2.forbidden_next = (B, B3, B2)
-B3.forbidden_next = (B, B2, B3)
+B.forbidden_next = (B, B2, B3, F, F2, F3)
+B2.forbidden_next = (B, B3, B2, F, F2, F3)
+B3.forbidden_next = (B, B2, B3, F, F2, F3)
 
-cube_moves = (R, R2, R3, L, L2, L3, D, D2, D3, U, U2, U3, F, F2, F3, B, B2, B3)
+cube_moves = (R, R2, R3, L, L2, L3, U, U2, U3, D, D2, D3, F, F2, F3, B, B2, B3)
 
 class Cube3(CubeState):
     """
