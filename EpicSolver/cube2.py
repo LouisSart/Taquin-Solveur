@@ -1,5 +1,5 @@
 import numpy as np
-import random
+import random, copy
 from .cube3 import CubeMove
 
 class CubeState2:
@@ -129,7 +129,7 @@ class Cube2(CubeState2):
                 np.array_equal(self.CO, np.array([0, 0, 0, 0, 0, 0, 0, 0]))
 
     def copy(self):
-        return Cube2((self.CP, self.CO))
+        return copy.deepcopy(self)
 
     def is_solvable(self):
         return self.isSolvable()
