@@ -51,3 +51,36 @@ class CP22Heuristic():
 
     def __call__(self, puzzle):
         return self.CP_dict[tuple(puzzle.CP).__hash__()]
+
+class WalkingDistanceHeuristic:
+    def __init__(self):
+        with open("tables/vertical_wd_table.pkl", "rb") as f:
+            self.table = pickle.load(f)
+
+    def __call__(self, puzzle):
+        board = []
+        bt_pos = 0
+        for i, line in enumerate(puzzle.tiles):
+            froms = [0,0,0,0]
+            for tile in line:
+                if tile == 0:
+                    bt_pos = i
+                else:
+                    row = tile//4
+                    froms[row] += 1
+            board += froms
+        vertical_coord = tuple(board) + (bt_pos,)
+
+        board = []
+        for j in range(4):
+            froms = [0]*4
+            for i in range(4):
+                tile = puzzle.tiles[i][j]
+                if tile == 0:
+                    bt_pos = j
+                else:
+                    col = tile%4
+                    froms[col] += 1
+            board += froms
+        horizontal_coord = tuple(board) + (bt_pos,)
+        return self.table[vertical_coord.__hash__()] + self.table[horizontal_coord.__hash__()]
