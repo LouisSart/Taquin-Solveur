@@ -4,7 +4,7 @@ from .solver import IDAstar
 from .cube2 import Cube2
 from .node import Node
 
-def build_walking_distance_table():
+def build_walking_distance_table(size):
     """
         a breadth-first generator for the walking distance table
     """
@@ -25,7 +25,7 @@ def build_walking_distance_table():
             self.bt_pos = 0
         """
 
-        def __init__(self, size=4, board=None):
+        def __init__(self, size, board=None):
             self.size = size
             self.board = board or [[0]*i + [size] + [0]*(size-i-1) for i in range(size)]
             self.board[0][0] -= 1
@@ -60,10 +60,10 @@ def build_walking_distance_table():
         def __str__(self):
             return f"{self.step, self.col}"
 
-    ups = [VerticalMove(-1, i) for i in range(4)]
-    downs = [VerticalMove(1, i) for i in range(4)]
+    ups = [VerticalMove(-1, i) for i in range(size)]
+    downs = [VerticalMove(1, i) for i in range(size)]
     # a swap with the same column in the opposite direction
-    # comes back to the original position so we forbid
+    # comes back to the previous position so we forbid
     # this by linking opposite moves
     for up, down in zip(ups, downs):
         up.forbidden_next = down
@@ -83,7 +83,7 @@ def build_walking_distance_table():
     # (1,5,9,13)  as from 2nd
     # (2,6,10,14) as from 3rd
     # (3,7,11,15) as from 4th
-    puzzle = VerticalWalkingTaquin()
+    puzzle = VerticalWalkingTaquin(size)
     root = Node(puzzle)
     queue = collections.deque([root])
     generated = {} # dict linking state hash to depth
@@ -95,7 +95,7 @@ def build_walking_distance_table():
             print(len(generated), node.depth)
             for child in node.expand(lambda puzzle: 0) : queue.append(child) # and generate their children
 
-    with open("vertical_wd_table.pkl", "wb") as f:
+    with open(f"vertical_{size}_wd_table.pkl", "wb") as f:
         pickle.dump(generated, f)
 
 def build_22CP_table():
