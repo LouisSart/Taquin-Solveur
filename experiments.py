@@ -39,9 +39,9 @@ def CO22_vs_CP22_benchmark():
     print("CP score (total gain in wins/number of runs):", cp_dom*cp_wins/N)
     print("CO score (total gain in wins/number of runs):", co_dom*co_wins/N)
 
-def manhattan_vs_outer_line_benchmark():
-    with open("tables/outer_line_table.pkl", "rb") as f:
-        outer_line_table = pickle.load(f)
+def manhattan_vs_fringe_benchmark():
+    with open("tables/3_fringe_table.pkl", "rb") as f:
+        fringe_table = pickle.load(f)
 
     puzzle = Taquin((3,3))
     N = 10000
@@ -59,7 +59,7 @@ def manhattan_vs_outer_line_benchmark():
                 if tile in (0,2,5,6,7,8):
                     pos[idx[tile]] = (i,j)
         l = tuple(pos).__hash__()
-        m, o = manhattan(puzzle), outer_line_table[l]
+        m, o = manhattan(puzzle), fringe_table[l]
         if m>o:
             m_wins+=1
             m_score+=m-o
@@ -69,13 +69,13 @@ def manhattan_vs_outer_line_benchmark():
         h_dict.update({l:(m, o)})
 
     print(f"Ran {N} heuristic computations")
-    print("Manhattan wins:", m_wins, "Outer line wins:", o_wins, f"Ties : {N-m_wins-o_wins}")
+    print("Manhattan wins:", m_wins, "Fringe wins:", o_wins, f"Ties : {N-m_wins-o_wins}")
     print("Manhattan mean :", sum([x[0] for x in h_dict.values()])/len(h_dict))
-    print("Outer line mean :", sum([x[1] for x in h_dict.values()])/len(h_dict))
+    print("Fringe mean :", sum([x[1] for x in h_dict.values()])/len(h_dict))
     print("Manhattan mean gain in wins", m_score/m_wins)
-    print("Outer line mean gain in wins", o_score/o_wins)
+    print("Fringe mean gain in wins", o_score/o_wins)
     print("Manhattan score (total gain in wins/number of runs):", m_score/N)
-    print("Outer line score (total gain in wins/number of runs):", o_score/N)
+    print("Fringe score (total gain in wins/number of runs):", o_score/N)
 
 if __name__ == "__main__":
-    manhattan_vs_outer_line_benchmark()
+    manhattan_vs_fringe_benchmark()

@@ -48,11 +48,11 @@ if __name__ == "__main__":
         DFS(),
         Recursive_DFS()
     )
-    print("\nRunning IDA* with heuristics (Outer line, Manhattan, Walking Distance) :")
+    print("\nRunning IDA* with heuristics (Fringe, Manhattan, Walking Distance) :")
     print(hard)
     run_solvers(
         hard,
-        IDAstar(heuristic=OuterLineHeuristic()),
+        IDAstar(heuristic=FringeHeuristic()),
         IDAstar(heuristic=manhattan),
         IDAstar(heuristic=WalkingDistanceHeuristic(3)),
     )

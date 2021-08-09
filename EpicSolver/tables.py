@@ -98,6 +98,7 @@ def build_walking_distance_table(size):
     with open(f"vertical_{size}_wd_table.pkl", "wb") as f:
         pickle.dump(generated, f)
 
+
 def build_22CP_table():
     """
     suboptimal way of generating the corner permutation optimals
@@ -157,67 +158,42 @@ def build_22CO_table():
         pickle.dump(s, f)
 
 
-def build_outer_line_table():
+def build_fringe_table(size=3):
 
     """
-    suboptimal way of generating the outer line optimals
-    for every of the 60480 positions for the 3x3 puzzle
+        breadth-first generator for the fringe heuristic
+        Stores the distance to solving the "fringe", aka the right and bottom tiles
+        (and the blank space). Solved position for the 15-Puzzle:
+        0  x  2
+        x  x  5
+        6  7  8
+        WARNING: size is set as a parameter but it is highly recommended
+        to not use it for puzzles over size 3 because memory cost is huge
+        (over 8GB of RAM for 4x4 which means program will crash)
     """
+    fringe_tiles = (0,) + tuple((i+1)*size-1 for i in range(size-1)) + tuple(size*(size-1)+i for i in range(size))
+    idx = {a:i for i, a in enumerate(fringe_tiles)}
+    pos = [0]*2*size
 
-    class OuterLineTaquin(Taquin):
-        @property
-        def is_solved(self):
-            t = self.tiles
-            res = (t[0][2], t[1][2], t[2][0], t[2][1], t[2][2]) == (2,5,6,7,8)
-            return res
-        def copy(self):
-            return OuterLineTaquin(self.shape, [line[:] for line in self.tiles], self.bt_pos)
-        @property
-        def is_solvable(self):
-            return True
+    def coordinate(puzzle):
+        for i in range(size):
+            for j in range(size):
+                tile = puzzle.tiles[i][j]
+                if tile in fringe_tiles:
+                    pos[idx[tile]] = (i,j)
+        return tuple(pos).__hash__()
 
-    def outer_line_manhattan(puzzle):
-        """
-        manhattan distance for a 3x3 taquin outer line
-        """
-        cumdist = 0
-        tiles = puzzle.tiles
-        for i in range(3):
-            for j in range(3):
-                tile = tiles[i][j]
-                if tile in (2,5,6,7,8):
-                    I, J = tile//3, tile%3
-                    cumdist += abs(i-I) + abs(j-J)
-        return cumdist
+    puzzle = Taquin((size, size))
+    root = Node(puzzle)
+    queue = collections.deque([root])
+    generated = {} # dict linking state hash to depth
+    while queue:
+        node = queue.popleft()
+        coord = coordinate(node.puzzle)
+        if coord not in generated:
+            generated.update({coord:node.depth}) # store newly encountered positions
+            print(len(generated), node.depth)
+            for child in node.expand(lambda puzzle: 0) : queue.append(child) # and generate their children
 
-    def outer_tiles_pos(K):
-        return K//3, K%3
-
-    h_table = {}
-    counter = 0
-    solver = IDAstar(heuristic=outer_line_manhattan, find_all=False, verbose=False)
-
-    for i0 in range(9):
-        for i2 in range(9):
-            if i2 != i0:
-                for i5 in range(9):
-                    if i5 not in (i0, i2):
-                        for i6 in range(9):
-                            if i6 not in (i0, i2, i5):
-                                for i7 in range(9):
-                                    if i7 not in (i0, i2, i5, i6):
-                                        for i8 in range(9):
-                                            if i8 not in (i0, i2, i5, i6, i7):
-
-                                                t = [-1,-1,-1,-1,-1,-1,-1,-1,-1]
-                                                t[i0], t[i2], t[i5], t[i6], t[i7], t[i8] = 0, 2, 5, 6, 7, 8
-                                                tiles = [t[i*3:(i+1)*3] for i in range(3)]
-                                                puzzle = OuterLineTaquin(shape=(3,3), tiles=tiles)
-                                                pos = tuple(outer_tiles_pos(i) for i in (i0,i2,i5,i6,i7,i8))
-                                                label = pos.__hash__()
-                                                sols = solver.solve(puzzle)
-                                                h_table.update({label:sols[-1].depth,})
-                                                print(len(h_table), "/ 60480",{label:sols[-1].depth,})
-
-    with open("outer_line_table.pkl", "wb") as f:
-        pickle.dump(h_table, f)
+    with open(f"{size}_fringe_table.pkl", "wb") as f:
+        pickle.dump(generated, f)

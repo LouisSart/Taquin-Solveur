@@ -17,11 +17,11 @@ def manhattan(puzzle):
             if tile: cumdist += abs(i-I) + abs(j-J)
     return cumdist
 
-class OuterLineHeuristic():
+class FringeHeuristic():
 
     def __init__(self):
-        with open("tables/outer_line_table.pkl", "rb") as f:
-            self.outer_line_dict = pickle.load(f)
+        with open("tables/3_fringe_table.pkl", "rb") as f:
+            self.fringe_line_dict = pickle.load(f)
         self.idx = {0:0,2:1,5:2,6:3,7:4,8:5}
         self.pos = [0,0,0,0,0,0]
 
@@ -32,7 +32,7 @@ class OuterLineHeuristic():
                 tile = puzzle.tiles[i][j]
                 if tile in (0,2,5,6,7,8):
                     self.pos[self.idx[tile]] = (i,j)
-        return self.outer_line_dict[tuple(self.pos).__hash__()]
+        return self.fringe_line_dict[tuple(self.pos).__hash__()]
 
 class CO22Heuristic():
 
