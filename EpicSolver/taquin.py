@@ -1,4 +1,4 @@
-import random, copy
+import random
 import numpy as np
 
 # 3x3 Solved puzzle scheme
@@ -95,7 +95,7 @@ class Taquin:
             move = choice
 
     def copy(self):
-        return copy.deepcopy(self)
+        return Taquin(self.shape, [[tile for tile in line] for line in self.tiles], self.bt_pos)
 
     def random_state(self):
         m, n = self.shape
