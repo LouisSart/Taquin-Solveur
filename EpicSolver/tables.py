@@ -3,6 +3,7 @@ from .taquin import Taquin
 from .solver import IDAstar
 from .cube2 import Cube2
 from .node import Node
+from .heuristics import NoneHeuristic
 
 def build_walking_distance_table(size):
     """
@@ -93,7 +94,7 @@ def build_walking_distance_table(size):
         if state.__hash__() not in generated:
             generated.update({state.__hash__():node.depth}) # store newly encountered positions
             print(len(generated), node.depth)
-            for child in node.expand(lambda puzzle: 0) : queue.append(child) # and generate their children
+            for child in node.expand(NoneHeuristic) : queue.append(child) # and generate their children
 
     with open(f"vertical_{size}_wd_table.pkl", "wb") as f:
         pickle.dump(generated, f)
@@ -193,7 +194,7 @@ def build_fringe_table(size=3):
         if coord not in generated:
             generated.update({coord:node.depth}) # store newly encountered positions
             print(len(generated), node.depth)
-            for child in node.expand(lambda puzzle: 0) : queue.append(child) # and generate their children
+            for child in node.expand(NoneHeuristic) : queue.append(child) # and generate their children
 
     with open(f"{size}_fringe_table.pkl", "wb") as f:
         pickle.dump(generated, f)

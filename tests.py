@@ -27,7 +27,7 @@ def time_solvers(puzzles, *solvers):
 def run_solvers(puzzle, *solvers):
 
     for solver in solvers:
-        print ("*"*30)
+
         solver.solve(puzzle)
         solver.print_solutions()
 
@@ -38,21 +38,30 @@ if __name__ == "__main__":
     run_solvers(
         easy,
         BFS(),
-        Astar(),
+        Astar(heuristic=Manhattan()),
     )
+    print ("*"*30)
     print("\nRunning solvers for hard 3x3 position :")
     print(hard)
     run_solvers(
         hard,
-        Astar(),
-        DFS(),
-        Recursive_DFS()
+        Astar(heuristic=Manhattan()),
+        DFS(heuristic=Manhattan()),
+        Recursive_DFS(heuristic=Manhattan())
     )
     print("\nRunning IDA* with heuristics (Fringe, Manhattan, Walking Distance) :")
     print(hard)
     run_solvers(
         hard,
         IDAstar(heuristic=FringeHeuristic()),
-        IDAstar(heuristic=manhattan),
+        IDAstar(heuristic=Manhattan()),
         IDAstar(heuristic=WalkingDistanceHeuristic(3)),
     )
+    print ("*"*30)
+    print("\nRunning IDA* for easy 4x4 with Manhattan and Walking Distance heuristics :")
+    print(easy44)
+    print(time_solvers(
+        (easy44,),
+        IDAstar(heuristic=Manhattan()),
+        IDAstar(heuristic=WalkingDistanceHeuristic(4)),
+    ))
