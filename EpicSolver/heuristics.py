@@ -57,9 +57,10 @@ class Manhattan:
         node.h = parent.h + step
 
 class InvertDistance:
-    def __init__(self, size):
+    def __init__(self, size, inversions=None):
+        self.h_inv, self.v_inv = inversions or (0, 0)
         self.size = size
-        self.transposer = {(j*size + i):i*size+j for i in range(size) for j in range(size)}
+        self.transposer = {(j*size+i):i*size+j for i in range(size) for j in range(size)}
 
     def inversion_counter(self, flattened):
         inversions = 0
@@ -86,19 +87,57 @@ class InvertDistance:
         transposed_flattened = [self.transposer[puzzle.tiles[j][i]] for i in range(size) for j in range(size)]
         v_inversions = self.inversion_counter(transposed_flattened)
 
+        self.h_inv, self.v_inv = h_inversions, v_inversions
+
+    def update(self, parent, move):
+        counter = 0
+        size = parent.puzzle.shape[0]
+        row, col = parent.puzzle.bt_pos
+        tiles = parent.puzzle.tiles
+        if move[0] == 1: # Down move
+            swapped = tiles[row+1][col]
+            for k in range(col+1, col+size):
+                if tiles[row+k//size][k%size] < swapped:
+                    self.h_inv += 1
+                else:
+                    self.h_inv -= 1
+        elif move[0] == -1: # Up move
+            swapped = tiles[row-1][col]
+            for k in range(col+1, col+size):
+                if tiles[row-1+k//size][k%size] > swapped:
+                    self.h_inv += 1
+                else:
+                    self.h_inv -= 1
+        elif move[1] == 1: # Right move
+            swapped = tiles[row][col+1]
+            for k in range(row+1, row+size):
+                if self.transposer[tiles[k%size][col+k//size]] < self.transposer[swapped]:
+                    self.v_inv += 1
+                else:
+                    self.v_inv -= 1
+        elif move[1] == -1: # Left move
+            swapped = tiles[row][col-1]
+            for k in range(row+1, row+size):
+                if self.transposer[tiles[k%size][col-1+k//size]] > self.transposer[swapped]:
+                    self.v_inv += 1
+                else:
+                    self.v_inv -= 1
+
+
+    @property
+    def estimate(self):
         # Since vertical (e.g. horizontal) moves can affect the number of horizontal (e.g. vertical)
         # inversions by at most size-1, the number of moves required to solve the horizontal inversions
         # (e.g. vertical) is at least inversions/(size-1). If the result has a remainder, it can be added (no idea why but nice)
         # Vertical and horizontal contributions can be summed up to get the total value for the heuristic
-        v_moves_lower_bound = h_inversions//(size-1) + h_inversions%(size-1)
-        h_moves_lower_bound = v_inversions//(size-1) + v_inversions%(size-1)
+        h_inversions, v_inversions = self.h_inv, self.v_inv
+        v_moves_lower_bound = h_inversions//(self.size-1) + h_inversions%(self.size-1)
+        h_moves_lower_bound = v_inversions//(self.size-1) + v_inversions%(self.size-1)
 
         return v_moves_lower_bound + h_moves_lower_bound
 
-    def update(self, node, moves):
-        # Not implemented yet
-        node.h = self.compute(node.puzzle)
-
+    def copy(self):
+        return InvertDistance(self.size, (self.h_inv, self.v_inv))
 
 
 class FringeHeuristic():
