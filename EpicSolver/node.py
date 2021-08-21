@@ -1,23 +1,26 @@
+from .heuristics import NoneHeuristic
 
 class Node:
-    def __init__(self, puzzle, heuristic=None, parent=None, move=None):
+    def __init__(self, puzzle, heuristic=NoneHeuristic()):
         self.puzzle = puzzle
-        self.parent = parent
-        self.h = heuristic.compute(self.puzzle) if heuristic is not None else 0
-        self.depth = parent.depth+1 if parent is not None else 0
-        self.move = move
+        self.parent = None
+        self.heuristic = heuristic
+        self.heuristic.compute(self.puzzle)
+        self.depth = 0
+        self.move = None
 
-    def expand(self, heuristic):
+    def expand(self):
 
         previous = self.move
         successors = []
         for move in self.puzzle.allowed_moves(previous):
-            new_state = self.puzzle.copy()
-            new_state.apply(move)
-            child = Node(new_state, parent=self, move=move)
-            heuristic.update(child, move)
+            child = Child(self, move)
             successors.append(child)
         return sorted(successors, key=lambda node: node.depth + node.h)
+
+    @property
+    def h(self):
+        return self.heuristic.estimate
 
     @property
     def is_goal_state(self):
@@ -32,3 +35,13 @@ class Node:
             path.append(node)
             node = node.parent
         return tuple(reversed(path))
+
+class Child(Node):
+    def __init__(self, parent, move):
+        self.parent = parent
+        self.move = move
+        self.puzzle = parent.puzzle.copy()
+        self.puzzle.apply(move)
+        self.depth = parent.depth+1
+        self.heuristic = parent.heuristic.copy()
+        self.heuristic.update(parent, move)

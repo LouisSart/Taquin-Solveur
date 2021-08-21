@@ -12,9 +12,9 @@ def time_solvers(puzzles, *solvers):
 
     def time_this_puzzle(puzzle, solvers):
         times = []
-        for solver in solvers:
+        for solver, heuristic in solvers:
             tic = time.process_time()
-            solver.solve(puzzle)
+            solver.solve(puzzle, heuristic)
             tac = time.process_time()
             times.append(tac-tic)
         return tuple(times)
@@ -26,9 +26,9 @@ def time_solvers(puzzles, *solvers):
 
 def run_solvers(puzzle, *solvers):
 
-    for solver in solvers:
+    for (solver, heuristic) in solvers:
 
-        solver.solve(puzzle)
+        solver.solve(puzzle, heuristic)
         solver.print_solutions()
 
 
@@ -37,31 +37,31 @@ if __name__ == "__main__":
     print(easy)
     run_solvers(
         easy,
-        BFS(),
-        Astar(heuristic=Manhattan()),
+        (BFS(), NoneHeuristic()),
+        (Astar(), Manhattan()),
     )
     print ("*"*30)
     print("\nRunning solvers for hard 3x3 position :")
     print(hard)
     run_solvers(
         hard,
-        Astar(heuristic=Manhattan()),
-        DFS(heuristic=Manhattan()),
-        Recursive_DFS(heuristic=Manhattan())
+        (Astar(), Manhattan()),
+        (DFS(), Manhattan()),
+        (Recursive_DFS(), Manhattan())
     )
     print("\nRunning IDA* with heuristics (Fringe, Manhattan, Walking Distance) :")
     print(hard)
     run_solvers(
         hard,
-        IDAstar(heuristic=FringeHeuristic()),
-        IDAstar(heuristic=Manhattan()),
-        IDAstar(heuristic=WalkingDistanceHeuristic(3)),
+        (IDAstar(), FringeHeuristic()),
+        (IDAstar(), Manhattan()),
+        (IDAstar(), WalkingDistance(3)),
     )
     print ("*"*30)
     print("\nRunning IDA* for easy 4x4 with Manhattan and Walking Distance heuristics :")
     print(easy44)
     print(time_solvers(
         (easy44,),
-        IDAstar(heuristic=Manhattan()),
-        IDAstar(heuristic=WalkingDistanceHeuristic(4)),
+        (IDAstar(), Manhattan()),
+        (IDAstar(), WalkingDistance(4)),
     ))

@@ -5,25 +5,37 @@ class MaxCombo:
         self.heuristics = heuristics
 
     def compute(self, puzzle):
-        return max(h.compute(puzzle) for h in self.heuristics)
-
-    def update_iterator(self, node, move):
-        for h in self.heuristics:
-            h.update(node, move)
-            yield node.h
+        for h in self.heuristics : h.compute(puzzle)
 
     def update(self, node, move):
-        node.h = max(self.update_iterator(node, move))
+        for h in self.heuristics : h.update(node, move)
+
+    @property
+    def estimate(self):
+        return max(h.estimate for h in self.heuristics)
+
+    def copy(self):
+        return MaxCombo(*(h.copy() for h in self.heuristics))
 
 class NoneHeuristic:
     # The heuristic object that you would use when
     # running a search with no heuristic
-    def compute(puzzle):
-        return 0
-    def update(node, move):
-        node.h = 0
+    def __init__(self):
+        self.estimate = 0
+
+    def compute(self, puzzle):
+        pass
+
+    def update(self, node, move):
+        pass
+
+    def copy(self):
+        return self
 
 class Manhattan:
+    def __init__(self, estimate=None):
+        self.estimate = estimate or 0
+
     def compute(self, puzzle):
         # cumulated Manhattan ("taxicab") distance
         # between each tile and its solved position
@@ -35,32 +47,36 @@ class Manhattan:
                 tile = tiles[i][j]
                 I, J = tile//n, tile%n
                 if tile: cumdist += abs(i-I) + abs(j-J)
-        return cumdist
+        self.estimate = cumdist
 
     def update(self, node, move):
         # Updating value given the parent node
         # and the move to apply is cheaper
-        parent = node.parent
-        size = parent.puzzle.shape[0]
-        i, j = parent.puzzle.bt_pos
+        size = node.puzzle.shape[0]
+        i, j = node.puzzle.bt_pos
         si, sj = move.slide
         if si:
-            I = parent.puzzle.tiles[i+si][j+sj]//size
+            I = node.puzzle.tiles[i+si][j+sj]//size
             curdist = abs(I-i-si)
             newdist = abs(I-i)
             step = newdist - curdist
         else:
-            J = parent.puzzle.tiles[i+si][j+sj]%size
+            J = node.puzzle.tiles[i+si][j+sj]%size
             curdist = abs(J-j-sj)
             newdist = abs(J-j)
             step = newdist - curdist
-        node.h = parent.h + step
+        self.estimate += step
+
+    def copy(self):
+        return Manhattan(self.estimate)
+
+
 
 class InvertDistance:
-    def __init__(self, size, inversions=None):
+    def __init__(self, size, inversions=None, transposer=None):
         self.h_inv, self.v_inv = inversions or (0, 0)
         self.size = size
-        self.transposer = {(j*size+i):i*size+j for i in range(size) for j in range(size)}
+        self.transposer = transposer
 
     def inversion_counter(self, flattened):
         inversions = 0
@@ -84,6 +100,7 @@ class InvertDistance:
         h_inversions = self.inversion_counter(flattened)
 
         # Same can be done for vertical inversions by transposing the board
+        self.transposer = {(j*size+i):i*size+j for i in range(size) for j in range(size)}
         transposed_flattened = [self.transposer[puzzle.tiles[j][i]] for i in range(size) for j in range(size)]
         v_inversions = self.inversion_counter(transposed_flattened)
 
@@ -137,7 +154,7 @@ class InvertDistance:
         return v_moves_lower_bound + h_moves_lower_bound
 
     def copy(self):
-        return InvertDistance(self.size, (self.h_inv, self.v_inv))
+        return InvertDistance(self.size, (self.h_inv, self.v_inv), self.transposer)
 
 
 class FringeHeuristic():
@@ -147,6 +164,7 @@ class FringeHeuristic():
             self.fringe_line_dict = pickle.load(f)
         self.idx = {0:0,2:1,5:2,6:3,7:4,8:5}
         self.pos = [0,0,0,0,0,0]
+        self.estimate = 0
 
     def compute(self, puzzle):
         for i in range(3):
@@ -158,7 +176,10 @@ class FringeHeuristic():
 
     def update(self, node, move):
         # Not implemented yet
-        node.h = self.compute(node.puzzle)
+        raise NotImplementedError
+
+    def copy(self):
+        return self
 
 class CO22Heuristic():
 
@@ -171,7 +192,7 @@ class CO22Heuristic():
 
     def update(self, node, move):
         # Not implemented yet
-        node.h = self.compute(node.puzzle)
+        raise NotImplementedError
 
 class CP22Heuristic():
 
@@ -184,13 +205,17 @@ class CP22Heuristic():
 
     def update(self, node, move):
         # Not implemented yet
-        node.h = self.compute(node.puzzle)
+        raise NotImplementedError
 
-class WalkingDistanceHeuristic:
-    def __init__(self, size):
+class WalkingDistance:
+    def __init__(self, size, estimate=None, table=None):
         self.size = size
-        with open(f"tables/vertical_{size}_wd_table.pkl", "rb") as f:
-            self.table = pickle.load(f)
+        self.estimate = estimate or 0
+        if table == None:
+            with open(f"tables/vertical_{size}_wd_table.pkl", "rb") as f:
+                self.table = pickle.load(f)
+        else:
+            self.table = table
 
     def compute(self, puzzle):
         board = []
@@ -218,8 +243,11 @@ class WalkingDistanceHeuristic:
                     froms[col] += 1
             board += froms
         horizontal_coord = tuple(board) + (bt_pos,)
-        return self.table[vertical_coord.__hash__()] + self.table[horizontal_coord.__hash__()]
+        self.estimate = self.table[vertical_coord.__hash__()] + self.table[horizontal_coord.__hash__()]
 
     def update(self, node, move):
         # Not implemented yet
-        node.h = self.compute(node.puzzle)
+        raise NotImplementedError
+
+    def copy(self):
+        return WalkingDistance(self.size, self.estimate, self.table)

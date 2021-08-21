@@ -1,13 +1,11 @@
 import collections
 from .node import Node
-from .heuristics import NoneHeuristic
 
 class Solver:
 
-    def __init__(self, max_depth=None, heuristic=None, find_all=None, verbose=None):
+    def __init__(self, max_depth=None, find_all=None, verbose=None):
 
         if not max_depth is None: self.max_depth = max_depth
-        if not heuristic is None: self.heuristic = heuristic
         if not find_all is None: self.find_all = find_all
         if not verbose is None: self.verbose = verbose
         self.solutions = []
@@ -28,7 +26,7 @@ class BFS(Solver):
     def __init__(self, max_depth=27, find_all=True, verbose=True):
         super().__init__(max_depth=max_depth, find_all=find_all, verbose=verbose)
 
-    def solve(self, puzzle):
+    def solve(self, puzzle, heuristic=None):
 
         if not puzzle.is_solvable:
             print(f"Position\n{puzzle}\nis not solvable")
@@ -54,7 +52,7 @@ class BFS(Solver):
                 if not found:
                     if self.verbose : print(f"{node.depth}-move solution(s) found !")
                     found, max_depth = True, node.depth
-            for child in node.expand(NoneHeuristic) : queue.append(child)
+            for child in node.expand() : queue.append(child)
         if found:
             return tuple(self.solutions)
             if self.verbose : print(f"Depth {depth:2} completed")
@@ -69,16 +67,16 @@ class Astar(Solver):
     Anyway the sorting is way too costly for paths over 30 moves and this algorithm
     will not perform as good as a depth first search with the same heuristic
     """
-    def __init__(self, heuristic=NoneHeuristic, verbose=True):
-        super().__init__(heuristic=heuristic, verbose=verbose)
+    def __init__(self, verbose=True):
+        super().__init__(verbose=verbose)
 
-    def solve(self, puzzle):
+    def solve(self, puzzle, heuristic):
 
         if not puzzle.is_solvable:
             print(f"Position \n{puzzle}\n is not solvable")
             return None
 
-        root = Node(puzzle, self.heuristic)
+        root = Node(puzzle, heuristic)
         self.solutions = []
         queue = collections.deque([root])
         if self.verbose: print("A* search : Running...")
@@ -90,7 +88,7 @@ class Astar(Solver):
                 self.solutions.append(node)
                 return tuple(self.solutions)
 
-            for child in node.expand(self.heuristic):
+            for child in node.expand():
                 queue.appendleft(child)
 
 class DFS(Solver):
@@ -98,17 +96,17 @@ class DFS(Solver):
     A depth first search algorithm with a heuristic. It updates its max_depth parameter
     every time it finds a shorter solution until it finds every optimal.
     """
-    def __init__(self, max_depth=30, heuristic=NoneHeuristic, find_all=True, verbose=True):
-        super().__init__(max_depth=max_depth, heuristic=heuristic, find_all=find_all, verbose=verbose)
+    def __init__(self, max_depth=30, find_all=True, verbose=True):
+        super().__init__(max_depth=max_depth, find_all=find_all, verbose=verbose)
         self.node_counter=0
 
-    def solve(self, puzzle):
+    def solve(self, puzzle, heuristic):
 
         if not puzzle.is_solvable:
             print(f"Position \n{puzzle}\n is not solvable")
             return None
 
-        root = Node(puzzle, self.heuristic)
+        root = Node(puzzle, heuristic)
         queue = [root]
         self.solutions = []
         found = False
@@ -128,7 +126,7 @@ class DFS(Solver):
                         return tuple(self.solutions)
                     max_depth = node.depth
                 else:
-                    for child in node.expand(self.heuristic):
+                    for child in node.expand():
                         queue.append(child)
                         self.node_counter+=1
             else:
@@ -143,11 +141,11 @@ class Recursive_DFS(Solver):
     DFS algorithm for iterative deepening A*
     Shows to be around 20% slower than the standard DFS, which makes it pretty useless
     """
-    def __init__(self, max_depth=30, heuristic=NoneHeuristic, verbose=True):
-        super().__init__(max_depth=max_depth ,heuristic=heuristic, verbose=verbose)
+    def __init__(self, max_depth=30, verbose=True):
+        super().__init__(max_depth=max_depth, verbose=verbose)
         self.node_counter = 0
 
-    def solve(self, puzzle):
+    def solve(self, puzzle, heuristic):
 
         def recursive_search(queue, max_depth):
             node = queue[-1]
@@ -156,7 +154,7 @@ class Recursive_DFS(Solver):
             if node.is_goal_state:
                 return (node,)
             estimate = float('inf')
-            for child in node.expand(self.heuristic):
+            for child in node.expand():
                 self.node_counter += 1
                 queue.append(child)
                 res = recursive_search(queue, max_depth)
@@ -165,7 +163,7 @@ class Recursive_DFS(Solver):
                 queue.pop()
             return estimate
 
-        root = Node(puzzle, self.heuristic)
+        root = Node(puzzle)
         self.node_counter = 0
         queue = [root]
         self.solutions = []
@@ -181,23 +179,24 @@ class IDAstar(Solver):
     Korf's iterative deepening A* search algorithm. The inner DFS is set
     to the standard one by default, but it can be changed by setting the df_solver attribute
     """
-    def __init__(self, heuristic=NoneHeuristic, find_all=True, verbose=True):
-        super().__init__(heuristic=heuristic, find_all=find_all, verbose=verbose)
-        self.df_solver = DFS(None, self.heuristic, find_all, False)
+    def __init__(self, find_all=True, verbose=True):
+        super().__init__(find_all=find_all, verbose=verbose)
+        self.df_solver = DFS(None, find_all, False)
         self.nodes_visited = []
 
-    def solve(self, puzzle):
+    def solve(self, puzzle, heuristic):
 
         if not puzzle.is_solvable:
             print(f"Position \n{puzzle}\n is not solvable")
             return None
 
-        root = Node(puzzle, self.heuristic)
+        root = Node(puzzle, heuristic)
         self.df_solver.max_depth = root.h
+        self.nodes_visited = []
         if self.verbose: print(f"IDA* : Starting search at depth {self.df_solver.max_depth}")
         found = root.is_goal_state
         while not found:
-            attempt = self.df_solver.solve(puzzle)
+            attempt = self.df_solver.solve(puzzle, heuristic)
             self.nodes_visited.append(self.df_solver.node_counter)
             if self.verbose: print(f"Depth {self.df_solver.max_depth:2} completed, nodes: {self.df_solver.node_counter:>8}")
             if isinstance(attempt, tuple):
