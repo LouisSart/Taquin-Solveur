@@ -133,3 +133,78 @@ class Taquin:
                 me = tiles_as_list[me]
 
         return counter%2 == sum(self.bt_pos)%2
+
+class WDTaquin:
+
+    """
+        Pseudo taquin puzzle class for generating row-wise
+        walking distance heuristic
+        Solved position :
+
+        self.board =
+              from 0  from 1  from 2  from 3
+        row 0 [[3       0       0       0]
+        row 1  [0       4       0       0]
+        row 2  [0       0       4       0]
+        row 3  [0       0       0       4]]
+
+        self.bt_pos = 0
+    """
+
+    def __init__(self, size, board=None, bt_pos=None, metric=None):
+        self.size = size
+        if board is None:
+            self.board = board or [[0]*i + [size] + [0]*(size-i-1) for i in range(size)]
+            self.board[0][0] -= 1
+        else:
+            self.board = board
+
+        if metric is None:
+            ups = [WDMove(-1, i) for i in range(size)]
+            downs = [WDMove(1, i) for i in range(size)]
+            # a swap with the same column in the opposite direction
+            # comes back to the previous position so we forbid
+            # this by linking opposite moves
+            for up, down in zip(ups, downs):
+                up.forbidden_next = down
+                down.forbidden_next = up
+            self.metric = tuple(ups + downs)
+        else:
+            self.metric = metric
+        self.bt_pos = bt_pos or 0
+
+
+    def allowed_moves(self, previous=None):
+        forbidden = previous.forbidden_next if previous else None
+        return tuple(move for move in self.metric \
+                if self.size>(self.bt_pos + move.step)>=0 and \
+                (self.board[self.bt_pos+move.step][move.col]))
+
+    def apply(self, move):
+        self.board[self.bt_pos+move.step][move.col] -=1
+        self.board[self.bt_pos][move.col] += 1
+        self.bt_pos += move.step
+
+    def copy(self):
+        return WDTaquin(self.size, [[k for k in line] for line in self.board], self.bt_pos, self.metric)
+
+    def coord(self):
+        return tuple(k for line in self.board for k in line) + (self.bt_pos,)
+
+class WDMove:
+    """
+        The move class for the row-wise walking distance heuristic
+        step = 1 for a down move, -1 for an up move
+        col : the column to swap the blank tile with
+        forbidden_next : a reference to the opposite WDMove object
+    """
+    def __init__(self, step, col):
+        self.step = step
+        self.col = col
+        self.forbidden_next = None
+    def __str__(self):
+        return f"{self.step, self.col}"
+
+    @property
+    def coord(self):
+        return (self.step, self.col)
