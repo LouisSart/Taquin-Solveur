@@ -24,7 +24,9 @@ class Node:
 
     @property
     def is_goal_state(self):
-        return self.puzzle.is_solved
+        if self.heuristic.estimate == 0:
+            return self.puzzle.is_solved
+        else: return False
 
     @property
     def path(self):

@@ -160,8 +160,8 @@ class WDTaquin:
             self.board = board
 
         if metric is None:
-            ups = [WDMove("v", -1, i) for i in range(size)]
-            downs = [WDMove("v", 1, i) for i in range(size)]
+            ups = [WDMove(-1, i) for i in range(size)]
+            downs = [WDMove(1, i) for i in range(size)]
             # a swap with the same column in the opposite direction
             # comes back to the previous position so we forbid
             # this by linking opposite moves
