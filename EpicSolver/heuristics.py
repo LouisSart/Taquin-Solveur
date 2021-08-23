@@ -208,14 +208,20 @@ class CP22Heuristic():
         raise NotImplementedError
 
 class WalkingDistance:
-    def __init__(self, size, estimate=None, table=None):
+    def __init__(self, size, estimate=None, coords=(None,None), estimate_table=None, move_table=None):
         self.size = size
         self.estimate = estimate or 0
-        if table == None:
+        self.row_coord, self.col_coord = coords
+        if estimate_table is None:
             with open(f"tables/vertical_{size}_wd_table.pkl", "rb") as f:
-                self.table = pickle.load(f)
+                self.estimate_table = pickle.load(f)
         else:
-            self.table = table
+            self.estimate_table = estimate_table
+        if move_table is None:
+            with open(f"tables/vertical_{size}_wd_move_table.pkl", "rb") as f:
+                self.move_table = pickle.load(f)
+        else:
+            self.move_table = move_table
 
     def compute(self, puzzle):
         board = []
@@ -229,7 +235,7 @@ class WalkingDistance:
                     row = tile//self.size
                     froms[row] += 1
             board += froms
-        vertical_coord = tuple(board) + (bt_pos,)
+        self.row_coord = tuple(board) + (bt_pos,)
 
         board = []
         for j in range(self.size):
@@ -242,12 +248,25 @@ class WalkingDistance:
                     col = tile%self.size
                     froms[col] += 1
             board += froms
-        horizontal_coord = tuple(board) + (bt_pos,)
-        self.estimate = self.table[vertical_coord.__hash__()] + self.table[horizontal_coord.__hash__()]
+        self.col_coord = tuple(board) + (bt_pos,)
+        self.estimate = self.estimate_table[self.row_coord] +\
+                        self.estimate_table[self.col_coord]
 
-    def update(self, node, move):
-        # Not implemented yet
-        raise NotImplementedError
+    def update(self, parent, move):
+        si, sj = move
+        i, j = parent.puzzle.bt_pos
+        swapped = parent.puzzle.tiles[i+si][j+sj]
+        if si: # Vertical move
+            move_coord = si, swapped//self.size # tile swapped belongs to line swapped//size
+            self.row_coord = self.move_table[self.row_coord][move_coord]
+        elif sj: # Horizontal move
+            move_coord = sj, swapped%self.size # tile swapped belongs to column swapped%size
+            self.col_coord = self.move_table[self.col_coord][move_coord]
+        self.estimate = self.estimate_table[self.row_coord] + self.estimate_table[self.col_coord]
 
     def copy(self):
-        return WalkingDistance(self.size, self.estimate, self.table)
+        return WalkingDistance(self.size,
+                                    self.estimate,
+                                    (self.row_coord, self.col_coord),
+                                    self.estimate_table,
+                                    self.move_table)
