@@ -34,6 +34,7 @@ class BFS(Solver):
 
         root = Node(puzzle)
         found = False
+        self.node_counter = 0
         self.solutions = []
         max_depth = self.max_depth
         queue = collections.deque([root])
@@ -52,7 +53,9 @@ class BFS(Solver):
                 if not found:
                     if self.verbose : print(f"{node.depth}-move solution(s) found !")
                     found, max_depth = True, node.depth
-            for child in node.expand() : queue.append(child)
+            for child in node.expand() :
+                self.node_counter += 1
+                queue.append(child)
         if found:
             return tuple(self.solutions)
             if self.verbose : print(f"Depth {depth:2} completed")
@@ -78,6 +81,7 @@ class Astar(Solver):
 
         root = Node(puzzle, heuristic)
         self.solutions = []
+        self.node_counter = 0
         queue = collections.deque([root])
         if self.verbose: print("A* search : Running...")
         while queue:
@@ -89,6 +93,7 @@ class Astar(Solver):
                 return tuple(self.solutions)
 
             for child in node.expand():
+                self.node_counter += 1
                 queue.appendleft(child)
 
 class DFS(Solver):
@@ -98,7 +103,6 @@ class DFS(Solver):
     """
     def __init__(self, max_depth=30, find_all=True, verbose=True):
         super().__init__(max_depth=max_depth, find_all=find_all, verbose=verbose)
-        self.node_counter=0
 
     def solve(self, puzzle, heuristic):
 
@@ -143,7 +147,6 @@ class Recursive_DFS(Solver):
     """
     def __init__(self, max_depth=30, verbose=True):
         super().__init__(max_depth=max_depth, verbose=verbose)
-        self.node_counter = 0
 
     def solve(self, puzzle, heuristic):
 
@@ -182,7 +185,6 @@ class IDAstar(Solver):
     def __init__(self, find_all=True, verbose=True):
         super().__init__(find_all=find_all, verbose=verbose)
         self.df_solver = DFS(None, find_all, False)
-        self.nodes_visited = []
 
     def solve(self, puzzle, heuristic):
 
@@ -192,12 +194,12 @@ class IDAstar(Solver):
 
         root = Node(puzzle, heuristic)
         self.df_solver.max_depth = root.h
-        self.nodes_visited = []
+        self.node_counter = 0
         if self.verbose: print(f"IDA* : Starting search at depth {self.df_solver.max_depth}")
         found = root.is_goal_state
         while not found:
             attempt = self.df_solver.solve(puzzle, heuristic)
-            self.nodes_visited.append(self.df_solver.node_counter)
+            self.node_counter += self.df_solver.node_counter
             if self.verbose: print(f"Depth {self.df_solver.max_depth:2} completed, nodes: {self.df_solver.node_counter:>8}")
             if isinstance(attempt, tuple):
                 found = True
