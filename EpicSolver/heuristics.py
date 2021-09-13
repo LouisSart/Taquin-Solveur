@@ -1,4 +1,5 @@
 import pickle
+from .utils import binomial, factorial, perm_coord
 
 class MaxCombo:
     def __init__(self, *heuristics):
@@ -70,8 +71,6 @@ class Manhattan:
     def copy(self):
         return Manhattan(self.estimate)
 
-
-
 class InvertDistance:
     def __init__(self, size, inversions=None, transposer=None):
         self.h_inv, self.v_inv = inversions or (0, 0)
@@ -140,7 +139,6 @@ class InvertDistance:
                 else:
                     self.v_inv -= 1
 
-
     @property
     def estimate(self):
         # Since vertical (e.g. horizontal) moves can affect the number of horizontal (e.g. vertical)
@@ -156,30 +154,41 @@ class InvertDistance:
     def copy(self):
         return InvertDistance(self.size, (self.h_inv, self.v_inv), self.transposer)
 
+class Fringe():
 
-class FringeHeuristic():
-
-    def __init__(self):
-        with open("tables/3_fringe_table.pkl", "rb") as f:
-            self.fringe_line_dict = pickle.load(f)
-        self.idx = {0:0,2:1,5:2,6:3,7:4,8:5}
-        self.pos = [0,0,0,0,0,0]
+    def __init__(self, size, table=None):
+        self.size = size
+        self.fringe_tiles = (0,) + tuple((i+1)*size-1 for i in range(size-1)) + tuple(size*(size-1)+i for i in range(size))
+        non_fringe_tiles = tuple(k for k in range(size**2) if k not in self.fringe_tiles)
+        self.fringe_ordering = tuple((k//size, k%size) for k in non_fringe_tiles + self.fringe_tiles)
+        if table is None:
+            with open(f"tables/{self.size}_fringe_table.pkl", "rb") as f:
+                self.table = pickle.load(f)
+        else:
+            self.table = table
         self.estimate = 0
 
     def compute(self, puzzle):
-        for i in range(3):
-            for j in range(3):
-                tile = puzzle.tiles[i][j]
-                if tile in (0,2,5,6,7,8):
-                    self.pos[self.idx[tile]] = (i,j)
-        return self.fringe_line_dict[tuple(self.pos).__hash__()]
+        flattened = [puzzle.tiles[i][j] for i, j in self.fringe_ordering]
+        N = len(flattened)
+        n = len(self.fringe_tiles)
+        sub_perm = []
+        arr_count = on_the_right = 0
+        for i, k in enumerate(reversed(flattened)):
+            if k in self.fringe_tiles:
+                b = binomial(i, on_the_right+1)
+                arr_count += b
+                on_the_right += 1
+                sub_perm.append(k)
+        self.estimate = self.table[arr_count*factorial(n) + perm_coord(sub_perm)]
 
     def update(self, node, move):
-        # Not implemented yet
-        raise NotImplementedError
+        p = node.puzzle.copy()
+        p.apply(move)
+        self.compute(p)
 
     def copy(self):
-        return self
+        return Fringe(self.size, self.table)
 
 class CO22Heuristic():
 
