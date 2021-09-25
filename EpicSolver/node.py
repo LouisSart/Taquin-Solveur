@@ -46,4 +46,4 @@ class Child(Node):
         self.puzzle.apply(move)
         self.depth = parent.depth+1
         self.heuristic = parent.heuristic.copy()
-        self.heuristic.update(parent, move)
+        self.heuristic.update(self, move)

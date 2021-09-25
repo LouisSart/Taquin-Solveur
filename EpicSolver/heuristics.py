@@ -53,6 +53,7 @@ class Manhattan:
     def update(self, node, move):
         # Updating value given the parent node
         # and the move to apply is cheaper
+        node = node.parent
         size = node.puzzle.shape[0]
         i, j = node.puzzle.bt_pos
         si, sj = move.slide
@@ -105,7 +106,8 @@ class InvertDistance:
 
         self.h_inv, self.v_inv = h_inversions, v_inversions
 
-    def update(self, parent, move):
+    def update(self, node, move):
+        parent = node.parent
         counter = 0
         size = parent.puzzle.shape[0]
         row, col = parent.puzzle.bt_pos
@@ -183,9 +185,7 @@ class Fringe():
         self.estimate = self.table[arr_count*factorial(n) + perm_coord(sub_perm)]
 
     def update(self, node, move):
-        p = node.puzzle.copy()
-        p.apply(move)
-        self.compute(p)
+        self.compute(node.puzzle)
 
     def copy(self):
         return Fringe(self.size, self.table)
@@ -261,7 +261,8 @@ class WalkingDistance:
         self.estimate = self.estimate_table[self.row_coord] +\
                         self.estimate_table[self.col_coord]
 
-    def update(self, parent, move):
+    def update(self, node, move):
+        parent = node.parent
         si, sj = move
         i, j = parent.puzzle.bt_pos
         swapped = parent.puzzle.tiles[i+si][j+sj]
