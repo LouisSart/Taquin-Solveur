@@ -1,13 +1,7 @@
-def factorial(n):
-    if n == 0:
-        return 1
-    else:
-        res = 1
-        for i in range(1,n+1):
-            res *= i
-    return res
+import math
 
-binomial = lambda n,k: factorial(n)//(factorial(k)*factorial(n-k)) if n>=k else 0
+factorial = math.factorial
+binomial = lambda n,k: math.comb(n,k) if n>=k else 0
 
 def perm_coord(perm):
     # Computes the coordinate of a permutation
