@@ -48,65 +48,6 @@ def build_walking_distance_table(size):
         pickle.dump(move_table, f)
 
 
-def build_22CP_table():
-    """
-    suboptimal way of generating the corner permutation optimals
-    for 2x2x2 cubes
-    """
-    class CPCube2(Cube2):
-        @property
-        def is_solved(self):
-            return np.array_equal(self.CP, np.array([0, 1, 2, 3, 4, 5, 6, 7]))
-        def copy(self):
-            return CPCube2((self.CP, self.CO))
-
-    solver = IDAstar(find_all=False, heuristic=lambda puzzle:0, verbose=False)
-    s = {}
-
-    for perm in it.permutations([0,1,2,4,5,6,7]):
-        actual_cp = perm[0:3] + (3,) + perm[3:]
-        puzzle = CPCube2((np.array(actual_cp), np.array([0,0,0,0,0,0,0,0])))
-        sol = solver.solve(puzzle)[-1]
-        s.update({actual_cp.__hash__():sol.depth})
-        print(len(s), '/ 5040', sol.depth)
-
-    with open("22CP_table.pkl", "wb") as f:
-        pickle.dump(s, f)
-
-
-def build_22CO_table():
-    """
-    suboptimal way of generating the corner orientation optimals
-    for 2x2x2 cubes
-    """
-    class COCube2(Cube2):
-        @property
-        def is_solved(self):
-            return np.array_equal(self.CO, np.array([0, 0, 0, 0, 0, 0, 0, 0]))
-        def copy(self):
-            return COCube2((self.CP, self.CO))
-
-    solver = IDAstar(find_all=False, heuristic=lambda puzzle:0, verbose=False)
-    s = {}
-    counter = 0
-
-    for i0 in range(3):
-        for i1 in range(3):
-            for i2 in range(3):
-                for i3 in range(3):
-                    for i4 in range(3):
-                        for i5 in range(3):
-                            co_tuple = (i0,i1,i2,0,i3,i4,i5) + (-(i0+i1+i2+i3+i4+i5)%3,)
-                            puzzle = COCube2((np.array([0,1,2,3,4,5,6,7]), np.array(co_tuple)))
-                            sol = solver.solve(puzzle)[-1]
-                            s.update({co_tuple.__hash__():sol.depth})
-                            counter+=1
-                            print(counter, "/ 729", sol.depth)
-
-    with open("22CO_table.pkl", "wb") as f:
-        pickle.dump(s, f)
-
-
 def build_fringe_table(size=3):
 
     """
