@@ -189,3 +189,78 @@ def build_fringe_table(size=3):
 
     with open(f"{size}_fringe_table.pkl", "wb") as f:
         pickle.dump(table, f)
+
+def build_pattern_table(size, pattern):
+
+    class HardQueue(collections.deque):
+        filenames_queue = collections.deque([])
+        queue_trail = collections.deque([])
+        n_files = 0
+
+        def is_not_empty(self):
+            return self.__bool__() or self.queue_trail.__bool__() or self.filenames_queue.__bool__()
+
+        def store(self, node):
+            self.queue_trail.append(node)
+
+            if len(self.queue_trail) > 1000000:
+                filename = f"chunk_{self.n_files}.pkl"
+                with open(filename, "wb") as f:
+                    print("Dumping queue trail...")
+                    pickle.dump(self.queue_trail, f)
+                self.queue_trail.clear()
+                self.n_files += 1
+                self.filenames_queue.append(filename)
+
+        def pop(self):
+            if not self:
+                if self.filenames_queue:
+                    next_file = self.filenames_queue.popleft()
+                    with open(next_file, "rb") as f:
+                        print("Loading chunk...")
+                        self.extend(pickle.load(f))
+                    os.remove(next_file)
+                elif self.queue_trail:
+                    self.extend(self.queue_trail)
+                    self.queue_trail.clear()
+                else:
+                    raise IndexError
+            return self.popleft()
+
+    puzzle = Taquin((size, size))
+    queue = HardQueue([(0,pattern.coord(puzzle), puzzle.bt_pos)])
+    N = factorial(size**2)//factorial(size**2-len(pattern.tiles))
+    table = bytearray(N)
+    checked_bt_indices = np.zeros((N, 2), dtype='uint8')
+    counter = 0
+
+    while queue.is_not_empty():
+        d, c, bt_pos = queue.pop() # Pop next node
+        node = Node(pattern.taquin_from_coord(c, bt_pos))
+        node.depth = d
+        for child in node.expand() : # generate the children
+            coord = pattern.coord(child.puzzle) # Compute that child's coordinate
+            i, j = child.puzzle.bt_pos
+            bt_idx = i*size + j
+            checked_bt_pos = np.unpackbits(checked_bt_indices[coord,:])
+            if table[coord] == 0: # first time we see this pattern position
+                table[coord] = child.depth # we store the depth
+                checked_bt_pos[bt_idx] = 1
+                checked_bt_indices[coord] = np.packbits(checked_bt_pos) # store the bt position where this position was met
+                queue.store((child.depth, coord, child.puzzle.bt_pos)) # store the child cause it has never been seen
+                counter += 1
+                print(f"{counter/N*100:.2f}%", counter, child.depth)
+            elif checked_bt_pos[bt_idx] == 0: # pattern position already seen, but with another bt_pos
+                checked_bt_pos[bt_idx] = 1 # mark this bt_pos as checked
+                checked_bt_indices[coord] = np.packbits(checked_bt_pos) # store the bt position
+                queue.store((child.depth, coord, child.puzzle.bt_pos)) # store the child
+            # print(child.depth, child.puzzle.bt_pos, np.unpackbits(checked_bt_indices[coord]))
+            # print(child.puzzle)
+
+    # When we do this we visit the solved position again at depth 2
+    # Since its stored h value is 0 at this point, it gets set to 2,
+    # so we need to reset it manually after the loop ends
+    table[pattern.coord(puzzle)] = 0
+
+    with open(f"{size}_pattern_table.pkl", "wb") as f:
+        pickle.dump(table, f)
