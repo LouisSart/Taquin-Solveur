@@ -102,6 +102,7 @@ class PatternTaquin:
         self.permutation = bytearray(sub_perm)
         self.layout = bytearray([1 if k in self.pattern.tiles else 0 for l in taquin.tiles for k in l])
         self.bt_pos = taquin.bt_pos[0]*self.size + taquin.bt_pos[1]
+        self.c = None
 
     @property
     def coordinate(self):
@@ -123,16 +124,15 @@ class PatternTaquin:
                     b = binomial(i, on_the_right+1)
                     arr_count += b
                     on_the_right += 1
-            return arr_count*factorial(self.size) + perm_coord(self.permutation)
+            return perm_coord(self.permutation)*self.pattern.nlayt + arr_count
 
     def __str__(self):
-        pattern_str = f"PatternTaquin(tiles={self.pattern.tiles})\n"
         it = iter(self.permutation)
-        board = [next(it) if k else -1 for k in self.layout]
+        board = [self.pattern.tiles[next(it)] if k else -1 for k in self.layout]
         board[self.bt_pos] = "o"
         board = [["x" if board[i*self.size+j]==-1 else str(board[i*self.size+j]) for j in range(self.size)] for i in range(self.size)]
         board_str = "\n".join(("  ".join(board[i])) for i in range(self.size))
-        return pattern_str + board_str
+        return board_str
 
     def allowed_moves(self, previous=None):
 
