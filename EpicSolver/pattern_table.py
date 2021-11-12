@@ -12,6 +12,10 @@ class Pattern:
         self.ids = {k:i for i, k in enumerate(self.tiles)}
         non_pattern_tiles = tuple(i for i in range(size**2) if i not in self.tiles)
         self.order = tuple(k for k in self.tiles + non_pattern_tiles)
+        self.nperm = factorial(len(pattern_tiles))
+        self.nlayt = binomial(size**2, len(pattern_tiles))
+        self.table_size = self.nperm*self.nlayt
+        assert self.table_size == factorial(size**2)//factorial(size**2-len(pattern_tiles))
 
     def taquin_from_coord(self, coord, bt_pos):
         size = self.size
@@ -56,6 +60,9 @@ class Pattern:
             tiles[i][j] = tile
         tiles[bt_pos[0]][bt_pos[1]] = 0
         return Taquin((size, size), tiles=tiles, bt_pos=bt_pos)
+
+    def __len__(self):
+        return len(self.tiles)
 
 
 PatternMove = collections.namedtuple('PatternMove', ('tile', 'swap'))
@@ -191,7 +198,7 @@ def build_pattern_table(size, tiles):
     puzzle.from_taquin(taquin)
     print("----------------")
     queue = HardQueue([Node(puzzle)])
-    N = factorial(size**2)//factorial(size**2-len(pattern.tiles))
+    N = pattern.table_size
     table = bytearray(N)
     checked_bt_states = np.zeros((N, 2), dtype='uint8')
     counter = 0
