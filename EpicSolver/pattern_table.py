@@ -50,6 +50,9 @@ class Pattern:
     def __len__(self):
         return len(self.tiles)
 
+    def __str__(self):
+        return f"Pattern(({self.size},{self.size}), {self.tiles})"
+
 
 PatternMove = collections.namedtuple('PatternMove', ('tile', 'swap'))
 
@@ -187,37 +190,41 @@ def build_pattern_table(size, tiles):
 
 
     taquin = Taquin((size, size))
-    # taquin.shuffle()
-    print(taquin)
     pattern = Pattern(size, tiles)
     puzzle = PatternTaquin(pattern)
     puzzle.from_taquin(taquin)
-    print("----------------")
     queue = HardQueue([Node(puzzle)])
     N = pattern.table_size
     table = bytearray(N)
     checked_bt_states = np.zeros((N, 2), dtype='uint8')
-    counter = 0
+    counter, d = 0, 0
     seen = set()
+    print(f"Generating table {pattern}")
+    print(" d,     %, nodes")
+    print("-"*15)
 
     while queue.is_not_empty():
         node = queue.pop() # Pop next node
         coord = node.puzzle.coordinate
         seen.add(coord)
-        bt_pos = node.puzzle.bt_pos
         children = node.expand() # we do this in advance to compute adjacent_bt_pos before filling checked_bt_states
-        adj = node.puzzle.adjacent_bt_pos
-        chk_bts = np.unpackbits(checked_bt_states[coord])
-        checked_bt_states[coord] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
         if table[coord] == 0: # first time we see this pattern position
             table[coord] = node.depth # we store the depth
             counter += 1
-            print(f"{counter/N*100:.2f}%", counter, node.depth)
-            for child in children :
+            for child in node.expand():
                 queue.store(child) # store the children
-        elif np.unpackbits(checked_bt_states[coord])[bt_pos] == 0: # if the pattern position has been seen but not with this bt_pos
-            for child in children :
+            adj = node.puzzle.adjacent_bt_pos
+            chk_bts = np.unpackbits(checked_bt_states[coord])
+            checked_bt_states[coord] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
+            if node.depth>d:
+                print(f"{node.depth:2}", f"{counter/N*100:5.2f}%", counter-1)
+                d = node.depth
+        elif np.unpackbits(checked_bt_states[coord])[node.puzzle.bt_pos] == 0: # if the pattern position has been seen but not with this bt_pos
+            for child in node.expand():
                 queue.store(child) # store the children
+            adj = node.puzzle.adjacent_bt_pos
+            chk_bts = np.unpackbits(checked_bt_states[coord])
+            checked_bt_states[coord] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
 
     # When we do this we visit the solved position again at depth 2
     # Since its stored h value is 0 at this point, it gets set to 2,
@@ -225,8 +232,6 @@ def build_pattern_table(size, tiles):
     table[puzzle.coordinate] = 0
 
     print("Table generated")
-    print(len(seen), pattern.table_size)
-    for i, k in enumerate(table):
-        if k==0: print(i)
+
     with open(f"{size}_pattern_table.pkl", "wb") as f:
         pickle.dump(table, f)
