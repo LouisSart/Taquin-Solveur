@@ -1,11 +1,10 @@
 import numpy as np, pickle, collections
-from .utils import HardQueue, valid_neighbours, perm_coord, factorial, binomial
+from .utils import *
 from .taquin import Taquin
 from .node import Node
 
 class Pattern:
     def __init__(self, size, pattern_tiles):
-        assert 0 not in pattern_tiles
         assert len(set(pattern_tiles)) == len(pattern_tiles)
         self.size = size
         self.tiles = tuple(sorted(pattern_tiles))
@@ -17,49 +16,36 @@ class Pattern:
         self.table_size = self.nperm*self.nlayt
         assert self.table_size == factorial(size**2)//factorial(size**2-len(pattern_tiles))
 
-    def taquin_from_coord(self, coord, bt_pos):
-        size = self.size
-        n = len(self.tiles)
-        N = size**2
-        # This loop retrieves the flattened indices
-        # of the pattern tiles positions from the first part
-        # of the coordinate: coord//factorial(n)
-        arr_count = coord//factorial(n)
-        pattern_ids = []
-        on_the_right = n
+    def layout_from_coord(self, coord):
+        # Builds the layout state that corresponds to coord
+        N = self.size**2
+        layout = [0]*N
+        c = coord
+        x = len(self)
         for i in range(N):
-            b = binomial(N-i-1, on_the_right)
-            if arr_count - b >= 0:
-                pattern_ids.append(i)
-                arr_count -= b
-                on_the_right -= 1
+            b = binomial(N-1-i, x)
+            if c-b >= 0:
+                layout[self.order[N-1-i]] = 1
+                x -= 1
+                c -= b
+        return layout
 
-        # This loop computes the permutation
-        # of the pattern tiles
-        perm_coord = coord%factorial(n)
-        icount = []
-        for i in range(n):
-            count = perm_coord%(i+1)
-            perm_coord = perm_coord//(i+1)
-            icount.append(count)
-        perm = []
-        rged = list(range(n))
-        for k in reversed(icount):
-            perm.append(rged.pop(len(rged)-k-1))
-        perm = [self.tiles[k] for k in perm]
-
-        # Setting the flat version of the puzzle
-        # Non pattern tiles are set to -1
-        flat = [-1]*N
-        for idx, tile in zip(pattern_ids, perm):
-            flat[idx] = tile
-        # Setting it back to a size*size board
-        tiles = [[-1]*size for i in range(size)]
-        for ids, tile in zip(self.order, flat):
-            i, j = ids
-            tiles[i][j] = tile
-        tiles[bt_pos[0]][bt_pos[1]] = 0
-        return Taquin((size, size), tiles=tiles, bt_pos=bt_pos)
+    def permutation_from_coord(self, coord):
+        # Builds the permutation corresponding to param coord
+        c = coord
+        n = len(self)
+        icount = [0]*n
+        k = 2
+        while c > 0:
+            icount[k-1] = c%k
+            c = c//k
+            k += 1
+        # We now compute the actual permutation from the icount array
+        perm = [0]*n
+        rged = list(range(len(self)))
+        for i, k in enumerate(reversed(icount)):
+            perm[n-i-1] = rged.pop(len(rged)-k-1)
+        return perm
 
     def __len__(self):
         return len(self.tiles)
@@ -101,8 +87,24 @@ class PatternTaquin:
                 sub_perm.append(self.pattern.ids[k])
         self.permutation = bytearray(sub_perm)
         self.layout = bytearray([1 if k in self.pattern.tiles else 0 for l in taquin.tiles for k in l])
+        self.adjacent_bt_pos = [0]*self.size**2
         self.bt_pos = taquin.bt_pos[0]*self.size + taquin.bt_pos[1]
         self.c = None
+
+    def from_coordinate(self, coord, bt_pos=None):
+        self.c = coord
+        nlayt = self.pattern.nlayt
+        lc, pc = coord%nlayt, coord//nlayt
+        self.layout = bytearray(self.pattern.layout_from_coord(lc))
+        self.permutation = bytearray(self.pattern.permutation_from_coord(pc))
+        self.adjacent_bt_pos = [0]*self.size**2
+        self.bt_pos = bt_pos
+        if bt_pos==None:
+            self.bt_pos = 0
+            k = self.layout[0]
+            while k==1:
+                self.bt_pos += 1
+                k = self.layout[self.bt_pos]
 
     @property
     def coordinate(self):
@@ -110,21 +112,15 @@ class PatternTaquin:
             return self.c
         else:
             # Computes the coordinate of the input puzzle
-            # First part is the arrangement counter :
-            # For each tile i that belongs to the pattern, count the number x of
-            # pattern tiles that come before it. Then this tile
-            # contributes c_nk(i, x+1) to the position coordinate.
-            # The sum of the contributions is the arrangement coordinate
-            # This works if the solved state has all pattern tiles stored at the beginning
+            # First part is the layout coordinate
             # Second part is the coordinate of the permutation of the pattern tiles
-            # Coordinate for the whole pattern is computed as : arr_count*size! + perm_coord
-            arr_count = on_the_right = 0
-            for i, k in enumerate(self.pattern.order):
-                if self.layout[k]==1:
-                    b = binomial(i, on_the_right+1)
-                    arr_count += b
-                    on_the_right += 1
-            return perm_coord(self.permutation)*self.pattern.nlayt + arr_count
+            # Coordinate for the whole pattern is computed as : perm_coord*(nlayt) + lay_coord
+            reordered_layout = (self.layout[self.pattern.order[i]] for i in range(self.size**2))
+            lc = layout_coordinate(reordered_layout)
+            pc = permutation_coordinate(self.permutation)
+            nlayt = self.pattern.nlayt
+            return pc*nlayt + lc
+
 
     def __str__(self):
         it = iter(self.permutation)
@@ -149,8 +145,8 @@ class PatternTaquin:
                 if kk not in seen:
                     if self.layout[kk]==1:
                         adj[k] = 1
-                        if not (ptile, pswap) == (k, kk):
-                            moves.append(PatternMove(tile=kk, swap=k))
+                        # if not (ptile, pswap) == (k, kk):
+                        moves.append(PatternMove(tile=kk, swap=k))
                     else:
                         queue.append(kk)
                         seen.add(kk)
@@ -202,11 +198,12 @@ def build_pattern_table(size, tiles):
     table = bytearray(N)
     checked_bt_states = np.zeros((N, 2), dtype='uint8')
     counter = 0
-    found=False
+    seen = set()
 
     while queue.is_not_empty():
         node = queue.pop() # Pop next node
         coord = node.puzzle.coordinate
+        seen.add(coord)
         bt_pos = node.puzzle.bt_pos
         children = node.expand() # we do this in advance to compute adjacent_bt_pos before filling checked_bt_states
         adj = node.puzzle.adjacent_bt_pos
@@ -227,8 +224,9 @@ def build_pattern_table(size, tiles):
     # so we need to reset it manually after the loop ends
     table[puzzle.coordinate] = 0
 
+    print("Table generated")
+    print(len(seen), pattern.table_size)
     for i, k in enumerate(table):
         if k==0: print(i)
-
     with open(f"{size}_pattern_table.pkl", "wb") as f:
         pickle.dump(table, f)
