@@ -186,7 +186,7 @@ class PatternTaquin:
         return PatternTaquin(pattern_taquin=self)
 
 
-def build_pattern_table(size, tiles):
+def build_pattern_table(size, tiles, prefix=None):
 
 
     taquin = Taquin((size, size))
@@ -233,5 +233,7 @@ def build_pattern_table(size, tiles):
 
     print("Table generated")
 
-    with open(f"{size}_pattern_table.pkl", "wb") as f:
+    if prefix == None:
+        prefix = f"{size}x{size}_{len(pattern)}"
+    with open(f"{prefix}_pattern_table.pkl", "wb") as f:
         pickle.dump(table, f)
