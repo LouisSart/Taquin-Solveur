@@ -1,5 +1,5 @@
 import pickle
-from .utils import binomial, factorial, perm_coord
+# from .utils import binomial, factorial, perm_coord
 
 class MaxCombo:
     def __init__(self, *heuristics):

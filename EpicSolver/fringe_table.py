@@ -1,5 +1,5 @@
 import numpy as np, pickle
-from .utils import factorial, binomial, perm_coord, HardQueue
+# from .utils import factorial, binomial, perm_coord, HardQueue
 from .taquin import Taquin
 from .node import Node
 

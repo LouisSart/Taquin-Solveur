@@ -30,7 +30,7 @@ if __name__ == "__main__":
     time_puzzle_solve(hard, Recursive_DFS(), Manhattan())
     time_puzzle_solve(hard, IDAstar(), Manhattan())
     time_puzzle_solve(hard, IDAstar(), WalkingDistance(3))
-    time_puzzle_solve(easy44, IDAstar(), Fringe(4))
+    # time_puzzle_solve(easy44, IDAstar(), Fringe(4))
     time_puzzle_solve(easy44, IDAstar(), Manhattan())
     time_puzzle_solve(easy44, IDAstar(), InvertDistance(4))
     time_puzzle_solve(easy44, IDAstar(), WalkingDistance(4))
