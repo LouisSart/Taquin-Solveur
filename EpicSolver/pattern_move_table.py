@@ -86,7 +86,7 @@ def build_pattern_move_table(size, ntiles):
             the new permutation table index resulting from applying shift pshift to tile num_tile
     """
     max_shift = min(size-1, ntiles)
-    pidx_dt = np.dtype([('permutation', np.uint8, (ntiles,)), ('pindex', np.uint8, (ntiles, 2*max_shift+1))])
+    pidx_dt = np.dtype([('permutation', np.uint8, (ntiles,)), ('pindex', np.uint16, (ntiles, 2*max_shift+1))])
     permutation_move_table = np.zeros(nperm, dtype=pidx_dt)
 
 
