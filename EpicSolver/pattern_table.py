@@ -16,37 +16,6 @@ class Pattern:
         self.table_size = self.nperm*self.nlayt
         assert self.table_size == factorial(size**2)//factorial(size**2-len(pattern_tiles))
 
-    def layout_from_coord(self, coord):
-        # Builds the layout state that corresponds to coord
-        N = self.size**2
-        layout = [0]*N
-        c = coord
-        x = len(self)
-        for i in range(N):
-            b = binomial(N-1-i, x)
-            if c-b >= 0:
-                layout[self.order[N-1-i]] = 1
-                x -= 1
-                c -= b
-        return layout
-
-    def permutation_from_coord(self, coord):
-        # Builds the permutation corresponding to param coord
-        c = coord
-        n = len(self)
-        icount = [0]*n
-        k = 2
-        while c > 0:
-            icount[k-1] = c%k
-            c = c//k
-            k += 1
-        # We now compute the actual permutation from the icount array
-        perm = [0]*n
-        rged = list(range(len(self)))
-        for i, k in enumerate(reversed(icount)):
-            perm[n-i-1] = rged.pop(len(rged)-k-1)
-        return perm
-
     def __len__(self):
         return len(self.tiles)
 
