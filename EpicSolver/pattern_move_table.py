@@ -90,7 +90,8 @@ def build_pattern_move_table(size, ntiles):
     permutation_move_table = np.zeros(nperm, dtype=pidx_dt)
 
 
-    slide = {'L':-1, 'R':+1, 'U':-size, 'D':+size}
+    slide = {'L':1, 'R':-1, 'U':size, 'D':-size} # moves are seen from the blank spot perspective
+    # A tile moving down means the blank spot moving up
     neighbours = {i*size+j:tuple(valid_neighbours(size, i,j)) for i in range(size) for j in range(size)}
     invalid_lindex = nlayt
     def get_new_lindex_and_shift(layout, tile, move):
