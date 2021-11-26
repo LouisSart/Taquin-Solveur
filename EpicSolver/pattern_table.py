@@ -2,6 +2,7 @@ import numpy as np, pickle, collections
 from .utils import *
 from .taquin import Taquin
 from .node import Node
+from .pattern_move_table import factorial, binomial, permutation_coordinate, layout_coordinate, move_table as mt
 
 class Pattern:
     def __init__(self, size, pattern_tiles):
@@ -22,187 +23,124 @@ class Pattern:
     def __str__(self):
         return f"Pattern(({self.size},{self.size}), {self.tiles})"
 
+def valid_shift(size, i,j):
+    slides = ((0,1), (0,-1), (1,0), (-1,0))
+    for v, h in slides:
+        if h:
+            x = j+h
+            if (0 <= x < size): yield h
+        else:
+            y = i+v
+            if (0 <= y < size): yield v*size
 
-PatternMove = collections.namedtuple('PatternMove', ('tile', 'swap'))
-
+shifts = tuple({i*size+j:tuple(valid_shift(size, i,j)) for i in range(size) for j in range(size)} for size in range(5))
+PatternMove = collections.namedtuple('PatternMove', ('tile', 'shift', 'bt', 'str'))
+opposite = {'R':'L', 'L':'R', 'U':'D', 'D':'U'}
+forbidden = lambda p: (p.bt-p.shift, opposite[p.str]) if p else (None, None)
+named_moves = tuple({1:'R', -1:'L', size:'D', -size:'U'} for size in range(5))
 
 class PatternTaquin:
-    def __init__(self, pattern=None, pattern_taquin=None):
-        self.c = None
-        if pattern is not None:
-            self.size = pattern.size
-            self.pattern = pattern
-            self.permutation = bytearray(i for i in range(len(pattern.tiles)))
-            self.layout = bytearray([1 if k in pattern.tiles else 0 for k in range(self.size**2)])
-            self.bt_pos = 0
-            self.adjacent_bt_pos = [0]*self.size**2
-            self.neighbours = {i*self.size+j:tuple(valid_neighbours(self.size, i,j)) for i in range(self.size) for j in range(self.size)}
-            self.allowed_moves() # this sets up the adjacent_bt_pos attribute
-        else:
-            # This assumes pattern_taquin is not None
-            self.size = pattern_taquin.size
-            self.pattern = pattern_taquin.pattern
-            self.permutation = pattern_taquin.permutation[:]
-            self.layout = pattern_taquin.layout[:]
-            self.adjacent_bt_pos = [0]*self.size**2
-            self.bt_pos = pattern_taquin.bt_pos
-            self.neighbours = pattern_taquin.neighbours
 
+    def __init__(self, size=4, lindex=0, pindex=0, bt_pos=0):
+        self.size = size
+        self.lindex, self.pindex, self.bt_pos = lindex, pindex, bt_pos
 
-    def from_taquin(self, taquin):
-        flattened = [k for l in taquin.tiles for k in l]
-        sub_perm = []
-        layout = [0]*self.size**2
-        for i, k in enumerate(flattened):
-            if k in self.pattern.tiles:
-                layout[i] = 1
-                sub_perm.append(self.pattern.ids[k])
-        self.permutation = bytearray(sub_perm)
-        self.layout = bytearray([1 if k in self.pattern.tiles else 0 for l in taquin.tiles for k in l])
-        self.adjacent_bt_pos = [0]*self.size**2
-        self.bt_pos = taquin.bt_pos[0]*self.size + taquin.bt_pos[1]
-        self.c = None
-
-    def from_coordinate(self, coord, bt_pos=None):
-        self.c = coord
-        nlayt = self.pattern.nlayt
-        lc, pc = coord%nlayt, coord//nlayt
-        self.layout = bytearray(self.pattern.layout_from_coord(lc))
-        self.permutation = bytearray(self.pattern.permutation_from_coord(pc))
-        self.adjacent_bt_pos = [0]*self.size**2
-        self.bt_pos = bt_pos
-        if bt_pos==None:
-            self.bt_pos = 0
-            k = self.layout[0]
-            while k==1:
-                self.bt_pos += 1
-                k = self.layout[self.bt_pos]
-
-    @property
-    def coordinate(self):
-        if self.c is not None:
-            return self.c
-        else:
-            # Computes the coordinate of the input puzzle
-            # First part is the layout coordinate
-            # Second part is the coordinate of the permutation of the pattern tiles
-            # Coordinate for the whole pattern is computed as : perm_coord*(nlayt) + lay_coord
-            reordered_layout = (self.layout[self.pattern.order[i]] for i in range(self.size**2))
-            lc = layout_coordinate(reordered_layout)
-            pc = permutation_coordinate(self.permutation)
-            nlayt = self.pattern.nlayt
-            return pc*nlayt + lc
-
-
-    def __str__(self):
-        it = iter(self.permutation)
-        board = [self.pattern.tiles[next(it)] if k else -1 for k in self.layout]
-        board[self.bt_pos] = "o"
-        board = [["x" if board[i*self.size+j]==-1 else str(board[i*self.size+j]) for j in range(self.size)] for i in range(self.size)]
-        board_str = "\n".join(("  ".join(board[i])) for i in range(self.size))
-        return board_str
 
     def allowed_moves(self, previous=None):
-
-        moves = []
-        k = self.bt_pos
+        layout = mt.lmt[self.lindex]['layout']
         queue = collections.deque([self.bt_pos])
-        seen = set([self.bt_pos])
-        adj = self.adjacent_bt_pos
-        ptile, pswap = (previous.tile, previous.swap) if previous else (None, None)
+        moves = []
+        seen = set()
+        counter = 0
 
         while queue:
             k = queue.popleft()
-            for kk in self.neighbours[k]:
-                if kk not in seen:
-                    if self.layout[kk]==1:
-                        adj[k] = 1
-                        # if not (ptile, pswap) == (k, kk):
-                        moves.append(PatternMove(tile=kk, swap=k))
+            if k not in seen:
+                for s in shifts[self.size][k]:
+                    kk = k+s
+                    if layout[kk]==1:
+                        tile = sum(layout[:kk])
+                        if not (k, named_moves[self.size][s]) == forbidden(previous):
+                            moves.append(PatternMove(tile, s, k, named_moves[self.size][s]))
                     else:
                         queue.append(kk)
-                        seen.add(kk)
+                counter+=1
+            seen.add(k)
+
+        self.checked_bt_states = [1 if k in seen else 0 for k in range(self.size**2)]
         return tuple(moves)
 
     def apply(self, move):
-        p = self.permutation
-        tile, swap = move.tile, move.swap
-        if swap<tile:
-            pre_swap, pre_tile = 0, 0
-            for k in self.layout[:swap]:
-                if k == 1:
-                    pre_swap += 1
-                    pre_tile += 1
-            for k in self.layout[swap:tile]:
-                if k == 1:
-                    pre_tile += 1
-            p.insert(pre_swap, p.pop(pre_tile))
-        else:
-            pre_swap, pre_tile = 0,0
-            for k in self.layout[:tile]:
-                if k == 1:
-                    pre_swap += 1
-                    pre_tile += 1
-            for k in self.layout[tile:swap]:
-                if k == 1:
-                    pre_swap += 1
-            p.insert(pre_swap-1, p.pop(pre_tile))
-
-        self.bt_pos = tile
-        self.layout[tile], self.layout[swap] = 0, 1
+        permutation = mt.pmt[self.pindex]
+        new_lindex = mt.lmt[self.lindex]['tile'][move.tile][move.str]['lindex']
+        pshift = mt.lmt[self.lindex]['tile'][move.tile][move.str]['pshift']
+        self.lindex = new_lindex
+        self.pindex = mt.pmt[self.pindex]['pindex'][move.tile, pshift]
+        self.bt_pos = move.bt + move.shift
 
     def copy(self):
-        return PatternTaquin(pattern_taquin=self)
+        return PatternTaquin(self.size, self.lindex, self.pindex, self.bt_pos)
 
+    def from_taquin(self, taquin, pattern):
+        layout = [1 if k in pattern.tiles else 0 for line in taquin.tiles for k in line]
+        permutation = [pattern.tiles.index(k) for line in taquin.tiles for k in line if k in pattern.tiles]
+        i, j = taquin.bt_pos
+        self.lindex = layout_coordinate(layout)
+        self.pindex = permutation_coordinate(permutation)
+        self.bt_pos = self.size*i+j
+
+    def __str__(self):
+        layout = mt.lmt[self.lindex]['layout']
+        lstr = "\n".join(f"  {layout[i*self.size:(i+1)*self.size]}" for i in range(self.size))
+        pstr = str(mt.pmt[self.pindex]['permutation'])
+        return "\n".join((lstr, pstr))
 
 def build_pattern_table(size, tiles, prefix=None):
 
+    mt.load(size, len(tiles))
 
     taquin = Taquin((size, size))
     pattern = Pattern(size, tiles)
-    puzzle = PatternTaquin(pattern)
-    puzzle.from_taquin(taquin)
+    puzzle = PatternTaquin(size)
+    puzzle.from_taquin(taquin, pattern)
     queue = HardQueue([Node(puzzle)])
-    N = pattern.table_size
-    table = bytearray(N)
-    checked_bt_states = np.zeros((N, 2), dtype='uint8')
-    counter, d = 0, 0
-    seen = set()
+    table = np.zeros((pattern.nlayt, pattern.nlayt), dtype=np.uint8)
+    checked_bt_states = np.zeros((pattern.nlayt, pattern.nlayt, 2), dtype=np.uint8)
+    useless_counter, counter, d = 0, 0, 0
     print(f"Generating table {pattern}")
     print(" d,     %, nodes")
     print("-"*15)
 
     while queue.is_not_empty():
         node = queue.pop() # Pop next node
-        coord = node.puzzle.coordinate
-        seen.add(coord)
-        children = node.expand() # we do this in advance to compute adjacent_bt_pos before filling checked_bt_states
-        if table[coord] == 0: # first time we see this pattern position
-            table[coord] = node.depth # we store the depth
+        lindex, pindex = node.puzzle.lindex, node.puzzle.pindex
+        this_bts = checked_bt_states[lindex, pindex]
+        if table[lindex, pindex] == 0: # first time we see this pattern position
+            table[lindex, pindex] = node.depth # we store the depth
             counter += 1
             for child in node.expand():
                 queue.store(child) # store the children
-            adj = node.puzzle.adjacent_bt_pos
-            chk_bts = np.unpackbits(checked_bt_states[coord])
-            checked_bt_states[coord] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
+            adj = node.puzzle.checked_bt_states
+            chk_bts = np.unpackbits(this_bts)
+            checked_bt_states[lindex, pindex] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
             if node.depth>d:
-                print(f"{node.depth:2}", f"{counter/N*100:5.2f}%", counter-1)
+                print(f"{node.depth:2}", f"{(counter-1)/pattern.table_size*100:5.2f}%", counter-1)
                 d = node.depth
-        elif np.unpackbits(checked_bt_states[coord])[node.puzzle.bt_pos] == 0: # if the pattern position has been seen but not with this bt_pos
+        elif np.unpackbits(this_bts)[node.puzzle.bt_pos] == 0: # if the pattern position has been seen but not with this bt_pos
             for child in node.expand():
                 queue.store(child) # store the children
-            adj = node.puzzle.adjacent_bt_pos
-            chk_bts = np.unpackbits(checked_bt_states[coord])
-            checked_bt_states[coord] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
-
+            adj = node.puzzle.checked_bt_states
+            chk_bts = np.unpackbits(this_bts)
+            checked_bt_states[lindex, pindex] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
+    print(f"{(counter-1)/pattern.table_size*100:5.2f}%", counter-1)
     # When we do this we visit the solved position again at depth 2
     # Since its stored h value is 0 at this point, it gets set to 2,
     # so we need to reset it manually after the loop ends
-    table[puzzle.coordinate] = 0
+    table[puzzle.lindex, puzzle.pindex] = 0
 
     print("Table generated")
 
     if prefix == None:
-        prefix = f"{size}x{size}_{len(pattern)}"
+        prefix = f"tables/{size}_{len(pattern)}"
     with open(f"{prefix}_pattern_table.pkl", "wb") as f:
         pickle.dump(table, f)
