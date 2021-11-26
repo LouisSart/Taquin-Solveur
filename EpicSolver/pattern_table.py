@@ -104,8 +104,8 @@ def build_pattern_table(size, tiles, prefix=None):
     puzzle = PatternTaquin(size)
     puzzle.from_taquin(taquin, pattern)
     queue = HardQueue([Node(puzzle)])
-    table = np.zeros((pattern.nlayt, pattern.nlayt), dtype=np.uint8)
-    checked_bt_states = np.zeros((pattern.nlayt, pattern.nlayt, 2), dtype=np.uint8)
+    table = np.zeros((pattern.nlayt, pattern.nperm), dtype=np.uint8)
+    checked_bt_states = np.zeros((pattern.nlayt, pattern.nperm, 2), dtype=np.uint8)
     useless_counter, counter, d = 0, 0, 0
     print(f"Generating table {pattern}")
     print(" d,     %, nodes")
