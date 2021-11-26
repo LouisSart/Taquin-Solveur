@@ -1,4 +1,4 @@
-import numpy as np, time, math
+import numpy as np, math, os, pickle
 from .utils import valid_neighbours
 
 factorial = math.factorial
@@ -64,7 +64,8 @@ def permutation_from_coord(ntiles, coord):
 
 
 def build_pattern_move_table(size, ntiles):
-    nlayt , nperm = binomial(size**2, ntiles), factorial(ntiles)
+
+    nlayt, nperm = binomial(size**2, ntiles), factorial(ntiles)
     """
         layout_move_table[idx]['layout']:
             the layout for coordinate idx
@@ -147,4 +148,33 @@ def build_pattern_move_table(size, ntiles):
                 permutation_move_table[idx]['permutation'] = permutation
                 permutation_move_table[idx]['pindex'][tile, shift] = pindex
 
+    with open(f"tables/{size}_{ntiles}_layout_move_table.pkl", "wb") as f:
+        pickle.dump(layout_move_table, f)
+
+    with open(f"tables/{size}_{ntiles}_permutation_move_table.pkl", "wb") as f:
+        pickle.dump(permutation_move_table, f)
+
     return layout_move_table, permutation_move_table
+
+built_move_tables = [[False]*9]*5
+for size in range(5):
+    for ntiles in range(8):
+        built_move_tables[size][ntiles] = os.path.isfile(f"tables/{size}_{ntiles}_layout_move_table.pkl")
+
+class MoveTable:
+    lmt, pmt = None, None
+
+    def load(self, size, ntiles):
+        lfilename = f"tables/{size}_{ntiles}_layout_move_table.pkl"
+        pfilename = f"tables/{size}_{ntiles}_permutation_move_table.pkl"
+        if built_move_tables[size][ntiles]:
+            print(f"Size {size} {ntiles}-pattern move tables found")
+
+            with open(lfilename, "rb") as f:
+                self.lmt = pickle.load(f)
+            with open(pfilename, "rb") as f:
+                self.pmt = pickle.load(f)
+        else:
+            self.lmt, self.pmt = build_pattern_move_table(size, ntiles)
+
+move_table = MoveTable()
