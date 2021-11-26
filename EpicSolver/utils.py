@@ -1,4 +1,4 @@
-import collections
+import collections, pickle, os
 from .taquin import Taquin
 
 
