@@ -77,7 +77,7 @@ def build_pattern_move_table(size, ntiles):
     """
     lmove_dt = np.dtype([('lindex', np.uint16), ('pshift', np.int8)])
     ltile_dt = np.dtype([('L', lmove_dt), ('R', lmove_dt), ('U', lmove_dt), ('D', lmove_dt)])
-    lidx_dt = np.dtype([('layout', np.uint8, (16,)), ('tile', ltile_dt, (ntiles,))])
+    lidx_dt = np.dtype([('layout', np.uint8, (size**2,)), ('tile', ltile_dt, (ntiles,))])
     layout_move_table = np.zeros(nlayt, dtype=lidx_dt)
 
     """
@@ -156,10 +156,6 @@ def build_pattern_move_table(size, ntiles):
 
     return layout_move_table, permutation_move_table
 
-built_move_tables = [[False]*9]*5
-for size in range(5):
-    for ntiles in range(9):
-        built_move_tables[size][ntiles] = os.path.isfile(f"tables/{size}_{ntiles}_layout_move_table.pkl")
 
 class MoveTable:
     lmt, pmt = None, None
@@ -167,7 +163,7 @@ class MoveTable:
     def load(self, size, ntiles):
         lfilename = f"tables/{size}_{ntiles}_layout_move_table.pkl"
         pfilename = f"tables/{size}_{ntiles}_permutation_move_table.pkl"
-        if built_move_tables[size][ntiles]:
+        if os.path.isfile(f"tables/{size}_{ntiles}_layout_move_table.pkl"):
             print(f"Size {size} {ntiles}-pattern move tables found")
 
             with open(lfilename, "rb") as f:
