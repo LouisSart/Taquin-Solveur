@@ -140,7 +140,6 @@ def build_pattern_table(size, tiles, prefix=None):
 
     print("Table generated")
 
-    if prefix == None:
-        prefix = f"tables/{size}_{len(pattern)}"
-    with open(f"{prefix}_pattern_table.pkl", "wb") as f:
+    filename = f"tables/pattern/{size}x{size}/db/" + "_".join(str(k) for k in pattern.tiles)
+    with open(filename + ".pkl", "wb") as f:
         pickle.dump(table, f)

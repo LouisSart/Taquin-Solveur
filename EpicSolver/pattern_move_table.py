@@ -113,7 +113,7 @@ def build_pattern_move_table(size, ntiles):
             return lindex, shift
 
     # Building the layout table (about 2.5 s for an 8-tile pattern)
-    print(f"Building layout move table for {ntiles}-pattern")
+    print(f"Building layout move table for {ntiles}-tile pattern")
     for idx in range(nlayt):
         layout = layout_from_coord(size, ntiles, idx)
         layout_move_table[idx]['layout'] = layout
@@ -137,7 +137,7 @@ def build_pattern_move_table(size, ntiles):
             return permutation_coordinate(p)
 
     # Building the permutation table (about 10 s for an 8-tile pattern)
-    print(f"Building permutation move table for {ntiles}-pattern")
+    print(f"Building permutation move table for {ntiles}-tile pattern")
     for idx in range(nperm):
         permutation = permutation_from_coord(ntiles, idx)
         for tile in range(len(permutation)):
@@ -148,11 +148,8 @@ def build_pattern_move_table(size, ntiles):
                 permutation_move_table[idx]['permutation'] = permutation
                 permutation_move_table[idx]['pindex'][tile, shift] = pindex
 
-    with open(f"tables/{size}_{ntiles}_layout_move_table.pkl", "wb") as f:
-        pickle.dump(layout_move_table, f)
-
-    with open(f"tables/{size}_{ntiles}_permutation_move_table.pkl", "wb") as f:
-        pickle.dump(permutation_move_table, f)
+    with open(f"tables/pattern/{size}x{size}/move_tables/{ntiles}_tiles.pkl", "wb") as f:
+        pickle.dump((layout_move_table, permutation_move_table), f)
 
     return layout_move_table, permutation_move_table
 
@@ -161,15 +158,12 @@ class MoveTable:
     lmt, pmt = None, None
 
     def load(self, size, ntiles):
-        lfilename = f"tables/{size}_{ntiles}_layout_move_table.pkl"
-        pfilename = f"tables/{size}_{ntiles}_permutation_move_table.pkl"
-        if os.path.isfile(f"tables/{size}_{ntiles}_layout_move_table.pkl"):
-            print(f"Size {size} {ntiles}-pattern move tables found")
+        filename = f"tables/pattern/{size}x{size}/move_tables/{ntiles}_tiles.pkl"
+        if os.path.isfile(filename):
+            print(f"Size {size} {ntiles}-tile pattern move tables found")
 
-            with open(lfilename, "rb") as f:
-                self.lmt = pickle.load(f)
-            with open(pfilename, "rb") as f:
-                self.pmt = pickle.load(f)
+            with open(filename, "rb") as f:
+                self.lmt, self.pmt = pickle.load(f)
         else:
             self.lmt, self.pmt = build_pattern_move_table(size, ntiles)
 
