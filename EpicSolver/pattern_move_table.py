@@ -154,17 +154,21 @@ def build_pattern_move_table(size, ntiles):
     return layout_move_table, permutation_move_table
 
 
-class MoveTable:
-    lmt, pmt = None, None
+class MoveTables(dict):
 
     def load(self, size, ntiles):
         filename = f"tables/pattern/{size}x{size}/move_tables/{ntiles}_tiles.pkl"
+        assert len(self) < 4, "Cannot load more than 3 move tables to prevent memory overflow"
         if os.path.isfile(filename):
             print(f"Size {size} {ntiles}-tile pattern move tables found")
 
             with open(filename, "rb") as f:
-                self.lmt, self.pmt = pickle.load(f)
+                self.update({(size, ntiles):pickle.load(f)})
         else:
-            self.lmt, self.pmt = build_pattern_move_table(size, ntiles)
+            lmt, pmt = build_pattern_move_table(size, ntiles)
+            self.update({(size, ntiles):(lmt, pmt)})
 
-move_table = MoveTable()
+    def empty(self):
+        self = {}
+
+move_tables = MoveTables()

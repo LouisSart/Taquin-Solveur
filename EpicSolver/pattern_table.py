@@ -2,7 +2,7 @@ import numpy as np, pickle, collections
 from .utils import *
 from .taquin import Taquin
 from .node import Node
-from .pattern_move_table import factorial, binomial, permutation_coordinate, layout_coordinate, move_table as mt
+from .pattern_move_table import factorial, binomial, permutation_coordinate, layout_coordinate, move_tables as mt
 
 class Pattern:
     def __init__(self, size, pattern_tiles):
@@ -40,14 +40,14 @@ forbidden = lambda p: (p.bt-p.shift, opposite[p.str]) if p else (None, None)
 named_moves = tuple({1:'R', -1:'L', size:'D', -size:'U'} for size in range(5))
 
 class PatternTaquin:
-
-    def __init__(self, size=4, lindex=0, pindex=0, bt_pos=0):
-        self.size = size
-        self.lindex, self.pindex, self.bt_pos = lindex, pindex, bt_pos
-
+    lindex = 0
+    pindex = 0
+    size = None
+    ntiles = None
+    bt_pos = None
 
     def allowed_moves(self, previous=None):
-        layout = mt.lmt[self.lindex]['layout']
+        layout = mt[(self.size, self.ntiles)][0][self.lindex]['layout']
         queue = collections.deque([self.bt_pos])
         moves = []
         seen = set()
@@ -71,42 +71,48 @@ class PatternTaquin:
         return tuple(moves)
 
     def apply(self, move):
-        permutation = mt.pmt[self.pindex]
-        new_lindex = mt.lmt[self.lindex]['tile'][move.tile][move.str]['lindex']
-        pshift = mt.lmt[self.lindex]['tile'][move.tile][move.str]['pshift']
-        self.lindex = new_lindex
-        self.pindex = mt.pmt[self.pindex]['pindex'][move.tile, pshift]
+        lmt, pmt = mt[(self.size, self.ntiles)]
+        pshift = lmt[self.lindex]['tile'][move.tile][move.str]['pshift']
+        self.lindex = lmt[self.lindex]['tile'][move.tile][move.str]['lindex']
+        self.pindex = pmt[self.pindex]['pindex'][move.tile, pshift]
         self.bt_pos = move.bt + move.shift
 
     def copy(self):
-        return PatternTaquin(self.size, self.lindex, self.pindex, self.bt_pos)
+        cpy = PatternTaquin()
+        cpy.lindex, cpy.pindex = self.lindex, self.pindex
+        cpy.size, cpy.ntiles = self.size, self.ntiles
+        cpy.bt_pos = self.bt_pos
+        return cpy
 
     def from_taquin(self, taquin, pattern):
+        self.size = pattern.size
+        self.ntiles = len(pattern)
+        i, j = taquin.bt_pos
+        self.bt_pos = self.size*i+j
         layout = [1 if k in pattern.tiles else 0 for line in taquin.tiles for k in line]
         permutation = [pattern.tiles.index(k) for line in taquin.tiles for k in line if k in pattern.tiles]
-        i, j = taquin.bt_pos
         self.lindex = layout_coordinate(layout)
         self.pindex = permutation_coordinate(permutation)
-        self.bt_pos = self.size*i+j
 
     def __str__(self):
-        layout = mt.lmt[self.lindex]['layout']
+        layout = mt[0][self.lindex]['layout']
         lstr = "\n".join(f"  {layout[i*self.size:(i+1)*self.size]}" for i in range(self.size))
-        pstr = str(mt.pmt[self.pindex]['permutation'])
+        pstr = str(mt[1][self.pindex]['permutation'])
         return "\n".join((lstr, pstr))
 
 def build_pattern_table(size, tiles, prefix=None):
 
+    mt.empty()
     mt.load(size, len(tiles))
 
     taquin = Taquin((size, size))
     pattern = Pattern(size, tiles)
-    puzzle = PatternTaquin(size)
+    puzzle = PatternTaquin()
     puzzle.from_taquin(taquin, pattern)
     queue = HardQueue([Node(puzzle)])
     table = np.zeros((pattern.nlayt, pattern.nperm), dtype=np.uint8)
     checked_bt_states = np.zeros((pattern.nlayt, pattern.nperm, 2), dtype=np.uint8)
-    useless_counter, counter, d = 0, 0, 0
+    counter, d = 0, 0
     print(f"Generating table {pattern}")
     print(" d,     %, nodes")
     print("-"*15)
@@ -143,3 +149,5 @@ def build_pattern_table(size, tiles, prefix=None):
     filename = f"tables/pattern/{size}x{size}/db/" + "_".join(str(k) for k in pattern.tiles)
     with open(filename + ".pkl", "wb") as f:
         pickle.dump(table, f)
+
+    mt.empty()
