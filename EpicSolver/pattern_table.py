@@ -23,21 +23,16 @@ class Pattern:
     def __str__(self):
         return f"Pattern(({self.size},{self.size}), {self.tiles})"
 
-def valid_shift(size, i,j):
-    slides = ((0,1), (0,-1), (1,0), (-1,0))
-    for v, h in slides:
-        if h:
-            x = j+h
-            if (0 <= x < size): yield h
-        else:
-            y = i+v
-            if (0 <= y < size): yield v*size
+PatternMove = collections.namedtuple('PatternMove', ('str', 'bt', 'tile'))
 
-shifts = tuple({i*size+j:tuple(valid_shift(size, i,j)) for i in range(size) for j in range(size)} for size in range(5))
-PatternMove = collections.namedtuple('PatternMove', ('tile', 'shift', 'bt', 'str'))
-opposite = {'R':'L', 'L':'R', 'U':'D', 'D':'U'}
-forbidden = lambda p: (p.bt-p.shift, opposite[p.str]) if p else (None, None)
-named_moves = tuple({1:'R', -1:'L', size:'D', -size:'U'} for size in range(5))
+def valid_moves(size, i,j):
+    slides = {(0,1):'R', (0,-1):'L', (1,0):'D', (-1,0):'U'}
+    for v, h in slides.keys():
+        x, y = i+v, j+h
+        if (0 <= x < size) and (0 <= y < size):
+            yield PatternMove(bt=i*size+j, tile=x*size+y, str=slides[(v,h)])
+
+moves = {size:{i*size+j:tuple(valid_moves(size, i, j)) for i in range(size) for j in range(size)} for size in range(3,5)}
 
 class PatternTaquin:
     lindex = 0
@@ -47,35 +42,36 @@ class PatternTaquin:
     bt_pos = None
 
     def allowed_moves(self, previous=None):
+        return self.moves
+
+    def reachable_bt_pos(self, previous=None):
         layout = mt[(self.size, self.ntiles)][0][self.lindex]['layout']
         queue = collections.deque([self.bt_pos])
-        moves = []
+        my_moves = []
+        reached = [0]*self.size**2
         seen = set()
-        counter = 0
 
         while queue:
             k = queue.popleft()
-            if k not in seen:
-                for s in shifts[self.size][k]:
-                    kk = k+s
-                    if layout[kk]==1:
-                        tile = sum(layout[:kk])
-                        if not (k, named_moves[self.size][s]) == forbidden(previous):
-                            moves.append(PatternMove(tile, s, k, named_moves[self.size][s]))
-                    else:
+            for m in moves[self.size][k]:
+                kk = m.tile
+                if layout[kk]==1:
+                    reached[k] = 1
+                    my_moves.append(m)
+                else:
+                    if kk not in seen:
                         queue.append(kk)
-                counter+=1
             seen.add(k)
-
-        self.checked_bt_states = [1 if k in seen else 0 for k in range(self.size**2)]
-        return tuple(moves)
+        self.moves = my_moves
+        return reached
 
     def apply(self, move):
         lmt, pmt = mt[(self.size, self.ntiles)]
-        pshift = lmt[self.lindex]['tile'][move.tile][move.str]['pshift']
-        self.lindex = lmt[self.lindex]['tile'][move.tile][move.str]['lindex']
-        self.pindex = pmt[self.pindex]['pindex'][move.tile, pshift]
-        self.bt_pos = move.bt + move.shift
+        tile_idx = sum(lmt[self.lindex]['layout'][:move.tile])
+        pshift = lmt[self.lindex]['tile'][tile_idx][move.str]['pshift']
+        self.lindex = lmt[self.lindex]['tile'][tile_idx][move.str]['lindex']
+        self.pindex = pmt[self.pindex]['pindex'][tile_idx, pshift]
+        self.bt_pos = move.tile
 
     def copy(self):
         cpy = PatternTaquin()
@@ -95,9 +91,9 @@ class PatternTaquin:
         self.pindex = permutation_coordinate(permutation)
 
     def __str__(self):
-        layout = mt[0][self.lindex]['layout']
+        layout = mt[(self.size, self.ntiles)][0][self.lindex]['layout']
         lstr = "\n".join(f"  {layout[i*self.size:(i+1)*self.size]}" for i in range(self.size))
-        pstr = str(mt[1][self.pindex]['permutation'])
+        pstr = str(mt[(self.size, self.ntiles)][1][self.pindex]['permutation'])
         return "\n".join((lstr, pstr))
 
 def build_pattern_table(size, tiles, prefix=None):
@@ -112,6 +108,7 @@ def build_pattern_table(size, tiles, prefix=None):
     queue = HardQueue([Node(puzzle)])
     table = np.zeros((pattern.nlayt, pattern.nperm), dtype=np.uint8)
     checked_bt_states = np.zeros((pattern.nlayt, pattern.nperm, 2), dtype=np.uint8)
+    checked_bt_states[puzzle.lindex, puzzle.pindex] = np.packbits(puzzle.reachable_bt_pos()) # combine the bt_pos arrays
     counter, d = 0, 0
     print(f"Generating table {pattern}")
     print(" d,     %, nodes")
@@ -119,25 +116,24 @@ def build_pattern_table(size, tiles, prefix=None):
 
     while queue.is_not_empty():
         node = queue.pop() # Pop next node
-        lindex, pindex = node.puzzle.lindex, node.puzzle.pindex
-        this_bts = checked_bt_states[lindex, pindex]
-        if table[lindex, pindex] == 0: # first time we see this pattern position
-            table[lindex, pindex] = node.depth # we store the depth
-            counter += 1
-            for child in node.expand():
+        if node.depth>d:
+            print(f"{node.depth:2}", f"{counter/pattern.table_size*100:5.2f}%", counter)
+            d = node.depth
+        for child in node.expand():
+            lindex, pindex = child.puzzle.lindex, child.puzzle.pindex
+            this_bts = checked_bt_states[lindex, pindex]
+            if table[lindex, pindex] == 0: # first time we see this pattern position
+                table[lindex, pindex] = node.depth # we store the depth
+                adj = child.puzzle.reachable_bt_pos()
+                queue.store(child) # store the child
+                chk_bts = np.unpackbits(this_bts)
+                checked_bt_states[lindex, pindex] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
+                counter += 1
+            elif np.unpackbits(this_bts)[child.puzzle.bt_pos] == 0: # if the pattern position has been seen but not with this bt_pos
+                adj = child.puzzle.reachable_bt_pos()
                 queue.store(child) # store the children
-            adj = node.puzzle.checked_bt_states
-            chk_bts = np.unpackbits(this_bts)
-            checked_bt_states[lindex, pindex] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
-            if node.depth>d:
-                print(f"{node.depth:2}", f"{(counter-1)/pattern.table_size*100:5.2f}%", counter-1)
-                d = node.depth
-        elif np.unpackbits(this_bts)[node.puzzle.bt_pos] == 0: # if the pattern position has been seen but not with this bt_pos
-            for child in node.expand():
-                queue.store(child) # store the children
-            adj = node.puzzle.checked_bt_states
-            chk_bts = np.unpackbits(this_bts)
-            checked_bt_states[lindex, pindex] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
+                chk_bts = np.unpackbits(this_bts)
+                checked_bt_states[lindex, pindex] = np.packbits([1 if a or b else 0 for a, b in zip(adj, chk_bts)]) # combine the bt_pos arrays
     print(f"{(counter-1)/pattern.table_size*100:5.2f}%", counter-1)
     # When we do this we visit the solved position again at depth 2
     # Since its stored h value is 0 at this point, it gets set to 2,
