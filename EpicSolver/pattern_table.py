@@ -106,8 +106,8 @@ def build_pattern_table(size, tiles, prefix=None):
     puzzle = PatternTaquin()
     puzzle.from_taquin(taquin, pattern)
     queue = HardQueue([Node(puzzle)])
-    table = np.zeros((pattern.nlayt, pattern.nperm), dtype=np.uint8)
-    checked_bt_states = np.zeros((pattern.nlayt, pattern.nperm, 2), dtype=np.uint8)
+    table = np.zeros((pattern.nlayt, pattern.nperm), dtype=np.uint8) # ex for 8-tile pattern: 40320*12870 = 500 Mo
+    checked_bt_states = np.zeros((pattern.nlayt, pattern.nperm, 2), dtype=np.uint8) # ex for 8-tile pattern : 2*12870*40320 = 1,0 Go
     checked_bt_states[puzzle.lindex, puzzle.pindex] = np.packbits(puzzle.reachable_bt_pos()) # combine the bt_pos arrays
     counter, d = 0, 0
     print(f"Generating table {pattern}")

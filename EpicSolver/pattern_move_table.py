@@ -75,10 +75,10 @@ def build_pattern_move_table(size, ntiles):
             the shift (signed integer) to apply to tile num_tile within
             the permutation array when applying move named 'move_str' to tile num_tile
     """
-    lmove_dt = np.dtype([('lindex', np.uint16), ('pshift', np.int8)])
-    ltile_dt = np.dtype([('L', lmove_dt), ('R', lmove_dt), ('U', lmove_dt), ('D', lmove_dt)])
-    lidx_dt = np.dtype([('layout', np.uint8, (size**2,)), ('tile', ltile_dt, (ntiles,))])
-    layout_move_table = np.zeros(nlayt, dtype=lidx_dt)
+    lmove_dt = np.dtype([('lindex', np.uint16), ('pshift', np.int8)]) # 2+1 = 3 octets
+    ltile_dt = np.dtype([('L', lmove_dt), ('R', lmove_dt), ('U', lmove_dt), ('D', lmove_dt)]) # 4*3 = 12 octets
+    lidx_dt = np.dtype([('layout', np.uint8, (size**2,)), ('tile', ltile_dt, (ntiles,))]) # 16 + 12 = 28 octets
+    layout_move_table = np.zeros(nlayt, dtype=lidx_dt) # ex for 8-tile pattern: 12870 * 28 = 360360 octets = 360 ko
 
     """
         permutation_move_table[idx]['permutation']:
@@ -87,8 +87,8 @@ def build_pattern_move_table(size, ntiles):
             the new permutation table index resulting from applying shift pshift to tile num_tile
     """
     max_shift = min(size-1, ntiles)
-    pidx_dt = np.dtype([('permutation', np.uint8, (ntiles,)), ('pindex', np.uint16, (ntiles, 2*max_shift+1))])
-    permutation_move_table = np.zeros(nperm, dtype=pidx_dt)
+    pidx_dt = np.dtype([('permutation', np.uint8, (ntiles,)), ('pindex', np.uint16, (ntiles, 2*max_shift+1))]) # (2*(2*max_shift+1) + 1)*ntiles octets
+    permutation_move_table = np.zeros(nperm, dtype=pidx_dt) # ex for 8-tile pattern: 40320*(2*(2*3+1) + 1)*8 = 5160960 octets = 5Mo
 
 
     slide = {'L':1, 'R':-1, 'U':size, 'D':-size} # moves are seen from the blank spot perspective
