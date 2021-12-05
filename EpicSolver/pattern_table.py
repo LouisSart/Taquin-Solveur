@@ -42,7 +42,13 @@ class PatternTaquin:
     bt_pos = None
 
     def allowed_moves(self, previous=None):
-        return self.moves
+        ret = []
+        for k, kk in self.moves:
+            k_mvs = moves[self.size][k]
+            for k_mv in k_mvs:
+                if k_mv.tile == kk:
+                    ret.append(k_mv)
+        return ret
 
     def reachable_bt_pos(self, previous=None):
         layout = mt[(self.size, self.ntiles)][0][self.lindex]['layout']
@@ -57,7 +63,7 @@ class PatternTaquin:
                 kk = m.tile
                 if layout[kk]==1:
                     reached[k] = 1
-                    my_moves.append(m)
+                    my_moves.append((k, kk))
                 else:
                     if kk not in seen:
                         queue.append(kk)
