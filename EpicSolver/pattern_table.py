@@ -42,19 +42,14 @@ class PatternTaquin:
     bt_pos = None
 
     def allowed_moves(self, previous=None):
-        ret = []
-        for k, kk in self.moves:
-            k_mvs = moves[self.size][k]
-            for k_mv in k_mvs:
-                if k_mv.tile == kk:
-                    ret.append(k_mv)
-        return ret
+        layout = mt[(self.size, self.ntiles)][0][self.lindex]['layout']
+        return tuple(mv for k in range(self.size**2) for mv in moves[self.size][k] if self.reached[k]==1 and layout[mv.tile]==1)
 
     def reachable_bt_pos(self, previous=None):
         layout = mt[(self.size, self.ntiles)][0][self.lindex]['layout']
         queue = collections.deque([self.bt_pos])
         my_moves = []
-        reached = [0]*self.size**2
+        self.reached = [0]*self.size**2
         seen = set()
 
         while queue:
@@ -62,14 +57,14 @@ class PatternTaquin:
             for m in moves[self.size][k]:
                 kk = m.tile
                 if layout[kk]==1:
-                    reached[k] = 1
-                    my_moves.append((k, kk))
+                    self.reached[k] = 1
+                    # my_moves.append((k, kk))
                 else:
                     if kk not in seen:
                         queue.append(kk)
             seen.add(k)
-        self.moves = my_moves
-        return reached
+        # self.moves = my_moves
+        return self.reached
 
     def apply(self, move):
         lmt, pmt = mt[(self.size, self.ntiles)]
