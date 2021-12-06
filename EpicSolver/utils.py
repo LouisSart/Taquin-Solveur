@@ -1,4 +1,5 @@
-import collections, pickle, os
+import os, numpy as np
+from tempfile import mkdtemp
 from .taquin import Taquin
 
 
@@ -12,37 +13,37 @@ def valid_neighbours(size, i,j):
             if (-1 < y < size): yield i*size+y
 
 
-class HardQueue(collections.deque):
-    filenames_queue = collections.deque([])
-    queue_trail = collections.deque([])
-    n_files = 0
+class HardQueue:
+
+    def __init__(self, shape, dtype):
+        self.shape = shape
+        filename = os.path.join(mkdtemp(), "numpy_memmap.dat")
+        self.dtype = dtype
+        self.mmap = np.memmap(filename, dtype=dtype, mode="w+", shape=self.shape)
+        self.pop_chunk = 0
+        self.store_chunk = 0
+        self.pop_idx = 0
+        self.store_idx = 0
+        self.left_end = self.mmap[self.pop_chunk].view()
+        self.right_end = self.mmap[self.store_chunk].view()
 
     def is_not_empty(self):
-        return self.__bool__() or self.queue_trail.__bool__() or self.filenames_queue.__bool__()
+        return not (self.pop_chunk==self.store_chunk and self.pop_idx==self.store_idx)
 
-    def store(self, node):
-        self.queue_trail.append(node)
+    def store(self, state):
+        self.right_end[self.store_idx] = state
+        self.store_idx += 1
+        if self.store_idx == len(self.right_end):
+            self.store_idx = 0
+            self.store_chunk += 1
+            self.right_end = self.mmap[self.store_chunk].view()
 
-        if len(self.queue_trail) > 1000000:
-            filename = f"chunk_{self.n_files}.pkl"
-            with open(filename, "wb") as f:
-                print("Dumping queue trail...")
-                pickle.dump(self.queue_trail, f)
-                self.queue_trail.clear()
-                self.n_files += 1
-                self.filenames_queue.append(filename)
 
     def pop(self):
-        if not self:
-            if self.filenames_queue:
-                next_file = self.filenames_queue.popleft()
-                with open(next_file, "rb") as f:
-                    print("Loading chunk...")
-                    self.extend(pickle.load(f))
-                    os.remove(next_file)
-            elif self.queue_trail:
-                self.extend(self.queue_trail)
-                self.queue_trail.clear()
-            else:
-                raise IndexError
-        return self.popleft()
+        ret = self.left_end[self.pop_idx]
+        self.pop_idx += 1
+        if self.pop_idx==len(self.left_end):
+            self.pop_idx = 0
+            self.pop_chunk += 1
+            self.left_end = self.mmap[self.pop_chunk].view()
+        return ret
