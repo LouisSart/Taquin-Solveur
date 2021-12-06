@@ -1,4 +1,4 @@
-import numpy as np, pickle, collections
+import numpy as np, pickle, collections, time
 from .utils import *
 from .taquin import Taquin
 from .node import Node
@@ -110,17 +110,17 @@ def build_pattern_table(size, tiles, prefix=None):
     pattern = Pattern(size, tiles)
     puzzle = PatternTaquin()
     puzzle.from_taquin(taquin, pattern)
-    queue = HardQueue((10**3, 10**6), np.dtype([('lindex', np.uint16), ('pindex', np.uint16), ('depth', np.uint8), ('reached_blanks', np.uint8, (2,))]))
+    queue = HardQueue((10**3, 10**6), np.dtype('u2, u2, u1, 2u1')) # 2-byte integers for lindex and pindex, one byte for the depth and 2 bytes for the (packed) layout array
     table = np.zeros((pattern.nlayt, pattern.nperm), dtype=np.uint8) # ex for 8-tile pattern: 40320*12870 = 500 Mo
     checked_bt_states = np.zeros((pattern.nlayt, pattern.nperm, 2), dtype=np.uint8) # ex for 8-tile pattern : 2*12870*40320 = 1,0 Go
-    bts = np.packbits(puzzle.reachable_bt_pos())
-    checked_bt_states[puzzle.lindex, puzzle.pindex] = combine(checked_bt_states[puzzle.lindex, puzzle.pindex], bts) # combine the bt_pos arrays
-    queue.store((puzzle.lindex, puzzle.pindex, 0, bts))
+    checked_bt_states[puzzle.lindex, puzzle.pindex] = np.packbits(puzzle.reachable_bt_pos())
+    queue.store((puzzle.lindex, puzzle.pindex, 0, np.packbits(puzzle.reachable_bt_pos())))
     counter, d = 1, 0
     useless_counter = 0
+    start = time.time()
     print(f"Generating table {pattern}")
-    print(" d,     %, nodes")
-    print("-"*16)
+    print(" d |%      |nodes    |time (s)")
+    print("-"*28)
 
     while queue.is_not_empty():
         lindex, pindex, depth, bts = queue.pop() # Pop next node
@@ -130,7 +130,7 @@ def build_pattern_table(size, tiles, prefix=None):
         node = Node(p)
         node.depth = depth
         if node.depth>d:
-            print(f"{node.depth:2}", f"{counter/pattern.table_size*100:5.2f}%", counter)
+            print(f"{node.depth:2}", f"{counter/pattern.table_size*100:6.2f}% {counter:<9} {time.time()-start:<9.2f}")
             d = node.depth
         for child in node.expand():
             lindex, pindex = child.puzzle.lindex, child.puzzle.pindex
@@ -144,11 +144,8 @@ def build_pattern_table(size, tiles, prefix=None):
                 reached = child.puzzle.reachable_bt_pos()
                 checked_bt_states[lindex, pindex] = combine(checked_bt_states[lindex, pindex], reached) # combine the bt_pos arrays
                 queue.store((lindex, pindex, child.depth, np.packbits(reached))) # store the child
-            else:
-                useless_counter += 1
-                # print(useless_counter)
 
-    print("Table generated")
+    print("-"*28)
 
     filename = f"tables/pattern/{size}x{size}/db/" + "_".join(str(k) for k in pattern.tiles)
     with open(filename + ".pkl", "wb") as f:
