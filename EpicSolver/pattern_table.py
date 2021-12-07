@@ -91,6 +91,14 @@ class PatternTaquin:
         self.lindex = layout_coordinate(layout)
         self.pindex = permutation_coordinate(permutation)
 
+    @property
+    def layout(self):
+        return mt[(self.size, self.ntiles)][0][self.lindex]['layout']
+
+    @property
+    def permutation(self):
+        return mt[(self.size, self.ntiles)][1][self.pindex]['permutation']
+
     def __str__(self):
         layout = mt[(self.size, self.ntiles)][0][self.lindex]['layout']
         lstr = "\n".join(f"  {layout[i*self.size:(i+1)*self.size]}" for i in range(self.size))

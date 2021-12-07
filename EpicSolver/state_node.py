@@ -37,5 +37,5 @@ class StateChild(Node):
         self.move = move
         self.depth = parent.depth+1
         self.state = parent.state.copy()
-        self.state.update(self, move)
+        self.state.update(move)
         self.h = self.state.estimate
