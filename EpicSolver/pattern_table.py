@@ -1,4 +1,4 @@
-import numpy as np, pickle, collections, time
+import numpy as np, pickle, collections, time, os
 from .utils import *
 from .taquin import Taquin
 from .node import Node
@@ -152,3 +152,27 @@ def build_pattern_table(size, tiles, prefix=None):
         pickle.dump(table, f)
 
     mt.empty()
+
+    return table
+
+
+class PatternDatabase(dict):
+
+    def load(self, size, tiles):
+        tiles_str = "_".join(str(t) for t in tiles)
+        filename = f"tables/pattern/{size}x{size}/db/{tiles_str}.pkl"
+        assert len(self) < 4, "Cannot load more than 3 move tables to prevent memory overflow"
+
+        if os.path.isfile(filename):
+            print(f"Size {size} pattern database found for tiles {tiles}")
+
+            with open(filename, "rb") as f:
+                self.update({(size, tiles):pickle.load(f)})
+        else:
+            table = build_pattern_table(size, tiles)
+            self.update({(size, tiles):table})
+
+    def empty(self):
+        self = {}
+
+pattern_database = PatternDatabase()
