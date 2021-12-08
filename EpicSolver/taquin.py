@@ -29,7 +29,10 @@ up    = TaquinMove((-1,0),"U")
 down  = TaquinMove((1,0),"D", (up,))
 up.forbidden_next = (down,)
 
-taquin_moves = (left, right, up, down)
+taquin_moves = {(h,w):{(i,j):tuple(m for m in (left, right, up, down) if 0<=i+m[0]<h and 0<=j+m[1]<w)\
+                for i in range(h) for j in range(w)}\
+                for h in range(2,5) for w in range(2,5)}
+
 
 class Taquin:
 
@@ -67,15 +70,9 @@ class Taquin:
             str += " ".join(strs[i*n:(i+1)*n]) + "\n"
         return (str[:-1] + "\033[m")
 
-    def allowed_moves(self, previous):
-
-        bt_pos = self.bt_pos
-        forbidden = previous.forbidden_next if previous is not None else ()
-        possible_moves = [move for move in taquin_moves if (
-                0<=bt_pos[0]+move[0]<self.shape[0] and
-                0<=bt_pos[1]+move[1]<self.shape[1] and
-                move not in forbidden)]
-        return tuple(possible_moves)
+    def allowed_moves(self, previous=None):
+        forbidden = previous.forbidden_next if previous else None
+        return tuple(m for m in taquin_moves[self.shape][self.bt_pos] if m is not forbidden)
 
     def apply(self, move):
 
