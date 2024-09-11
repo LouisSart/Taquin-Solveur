@@ -14,6 +14,15 @@ std::ostream &operator<<(std::ostream &os, const Move &move) {
   return os;
 }
 
+using Sequence = std::vector<Move>;
+
+std::ostream &operator<<(std::ostream &os, const Sequence &seq) {
+  for (auto move : seq)
+    os << move << " ";
+  os << "\b";
+  return os;
+}
+
 template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
   static constexpr unsigned NTILES = N * N;
   unsigned blank;
@@ -65,6 +74,12 @@ template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
     (*this)[blank] = (*this)[new_blank];
     (*this)[new_blank] = 0;
     blank = new_blank;
+  }
+
+  void apply(const Sequence &seq) {
+    for (Move move : seq) {
+      apply(move);
+    }
   }
 
   void show() const {

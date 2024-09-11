@@ -1,15 +1,18 @@
 #include "src/taquin.hpp"
 
+Taquin<4> taquin;
+Sequence sequence{U, U, U, L, L, L, D, R, D, R};
+
 int main() {
-  auto taquin = Taquin<4>();
+  std::cout << sequence << std::endl;
+
   assert(taquin.is_possible(U));
-  taquin.apply(U);
-  taquin.apply(U);
-  taquin.apply(U);
+  taquin.apply(sequence);
   taquin.show();
-  assert(taquin.is_possible(L));
-  for (Move move : taquin.possible_moves(U)) {
-    std::cout << move << std::endl;
+
+  for (Move move : taquin.possible_moves(sequence.back())) {
+    std::cout << move << " ";
   }
+  std::cout << std::endl;
   return 0;
 }
