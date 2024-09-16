@@ -1,6 +1,8 @@
 #pragma once
 #include "taquin.hpp"
 #include "utils.hpp"
+#include <deque>
+#include <set>
 
 struct WDMove {
   Move m;
@@ -46,10 +48,13 @@ template <unsigned N> struct WDTaquin : std::array<unsigned, N * N> {
     assert(false);
   }
 
-  std::vector<WDMove> possible_moves(const WDMove &last = WDNONE) {
+  std::vector<WDMove> possible_moves() {
     std::vector<WDMove> ret;
     for (WDMove m : wd_moves) {
       if (is_possible_move(m)) {
+        // On s'en fout de refaire le move inverse en vrai
+        // de toute façon on ne génère pas les enfants
+        // d'une position connue
         ret.push_back(m);
       }
     }
@@ -69,6 +74,17 @@ template <unsigned N> struct WDTaquin : std::array<unsigned, N * N> {
     }
   }
 
+  unsigned hash() const {
+    unsigned ret = blank, p = N + 1;
+    for (unsigned r = 0; r < N - 1; ++r) {
+      for (unsigned c = 0; c < N - 1; ++c) {
+        ret += p * (*this)[r * N + c];
+        p *= N + 1;
+      }
+    }
+    return ret;
+  }
+
   void show() const {
     for (unsigned r = 0; r < N; ++r) {
       std::cout << "[";
@@ -83,3 +99,24 @@ template <unsigned N> struct WDTaquin : std::array<unsigned, N * N> {
     };
   }
 };
+
+template <unsigned N> std::set<unsigned> generate_table() {
+  auto root = WDTaquin<N>();
+  std::deque<WDTaquin<N>> queue{root};
+  std::set<unsigned> bag;
+
+  while (queue.size() > 0) {
+    auto wd = queue.back();
+    unsigned h = wd.hash();
+    if (!bag.contains(h)) {
+      for (auto m : wd.possible_moves()) {
+        auto child = wd;
+        child.apply(m);
+        queue.push_front(child);
+      }
+    }
+    queue.pop_back();
+    bag.insert(h);
+  }
+  return bag;
+}
