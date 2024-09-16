@@ -3,11 +3,11 @@
 template <typename T, std::size_t n, typename cast_t = T>
 void print_array(const typename std::array<T, n> &a) {
   std::cout << "{";
-  for (unsigned k : a) {
-    std::cout << static_cast<cast_t>(k) << " ";
+  for (auto k : a) {
+    std::cout << static_cast<cast_t>(k) << ", ";
   }
   if (n > 0)
-    std::cout << "\b";
+    std::cout << "\b\b";
   std::cout << "}" << std::endl;
 }
 
