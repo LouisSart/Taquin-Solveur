@@ -1,6 +1,7 @@
 #include "src/manhattan.hpp"
 #include "src/search.hpp"
 #include "src/taquin.hpp"
+#include "src/wd.hpp"
 
 void test_possible_moves() {
   Taquin<4> taquin;
@@ -31,15 +32,28 @@ void test_search() {
   Taquin<3> taquin({8, 0, 6, 5, 4, 7, 2, 3, 1});
 
   auto root = make_root(taquin);
-  root->state.show();
   auto solutions = IDAstar<false>(root, manhattan<3>);
   assert(solutions.size() == 1);
   assert(solutions[0]->get_path().size() == 27);
+}
+
+void test_wd() {
+  auto wd = WDTaquin<4>();
+
+  wd.apply({U, 2});
+  wd.apply({U, 1});
+  wd.apply({U, 0});
+  wd.apply({D, 1});
+  wd.apply({D, 2});
+  wd.apply({D, 3});
+
+  assert(wd.possible_moves().size() == 3);
 }
 
 int main() {
   test_possible_moves();
   test_manhattan();
   test_search();
+  test_wd();
   return 0;
 }
