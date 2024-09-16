@@ -9,8 +9,8 @@
 enum Move : unsigned { U, D, L, R, NONE };
 
 std::ostream &operator<<(std::ostream &os, const Move &move) {
-  static std::string move_to_str[4] = {
-      [U] = "U", [D] = "D", [L] = "L", [R] = "R"};
+  static std::string move_to_str[5] = {
+      [U] = "U", [D] = "D", [L] = "L", [R] = "R", [NONE] = "X"};
   os << move_to_str[move];
   return os;
 }
@@ -21,6 +21,7 @@ std::ostream &operator<<(std::ostream &os, const Sequence &seq) {
   for (auto move : seq)
     os << move << " ";
   os << "\b";
+  os << " (" << seq.size() << ")";
   return os;
 }
 
@@ -32,6 +33,16 @@ template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
     for (unsigned k = 0; k < NTILES - 1; ++k)
       (*this)[k] = k + 1;
     (*this)[blank] = 0;
+  }
+
+  Taquin(const std::array<unsigned, N * N> &arr_in)
+      : std::array<unsigned, N * N>{arr_in} {
+    blank = 0;
+    auto it = this->begin();
+    while (*it != 0) {
+      ++blank;
+      ++it;
+    }
   }
 
   bool is_possible_move(const Move &move) const {
