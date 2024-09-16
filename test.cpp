@@ -38,16 +38,15 @@ void test_search() {
 }
 
 void test_wd() {
-  auto wd = WDTaquin<4>();
 
-  wd.apply({U, 2});
-  wd.apply({U, 1});
-  wd.apply({U, 0});
-  wd.apply({D, 1});
-  wd.apply({D, 2});
-  wd.apply({D, 3});
+  auto wd3 = WDTaquin<3>();
+  wd3.apply({U, 1});
+  wd3.apply({U, 0});
+  wd3.apply({D, 1});
+  wd3.apply({D, 2});
 
-  assert(wd.possible_moves().size() == 3);
+  assert(generate_table<4>().size() == 24964);
+  assert(generate_table<3>().size() == 105);
 }
 
 int main() {
