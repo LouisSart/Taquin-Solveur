@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-enum Move : unsigned { U, D, L, R };
+enum Move : unsigned { U, D, L, R, NONE };
 
 std::ostream &operator<<(std::ostream &os, const Move &move) {
   static std::string move_to_str[4] = {
@@ -43,6 +43,8 @@ template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
       return (blank % N) != 0;
     } else if (move == R) {
       return (blank % N) != N - 1;
+    } else if (move == NONE) {
+      return false;
     }
     assert(false); // We shouldn't end up here
   }
