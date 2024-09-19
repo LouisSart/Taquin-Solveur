@@ -45,8 +45,14 @@ void test_wd() {
   wd3.apply({D, 1});
   wd3.apply({D, 2});
 
-  assert(generate_table<4>().size() == 24964);
-  assert(generate_table<3>().size() == 105);
+  auto table3 = generate_table<3>();
+
+  Taquin<3> t3({8, 0, 4, 3, 1, 5, 6, 2, 7});
+
+  auto root = make_root(t3);
+  auto solutions = IDAstar<false>(root, table3.get_estimator());
+  assert(solutions.size() == 1);
+  assert(solutions[0]->get_path().size() == 23);
 }
 
 int main() {

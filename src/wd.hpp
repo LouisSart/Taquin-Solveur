@@ -1,8 +1,9 @@
 #pragma once
 #include "taquin.hpp"
 #include "utils.hpp"
+#include <cstdint>
 #include <deque>
-#include <set>
+#include <map>
 
 struct WDMove {
   Move m;
@@ -30,8 +31,9 @@ template <unsigned N> struct WDTaquin : std::array<unsigned, N * N> {
   static constexpr WDMove WDNONE{NONE, N};
 
   unsigned blank;
+  unsigned depth;
 
-  WDTaquin() : blank{N - 1} {
+  WDTaquin() : blank{N - 1}, depth{0} {
     this->fill(0);
     for (unsigned k = 0; k < N; ++k) {
       (*this)[k * N + k] = N;
@@ -52,9 +54,6 @@ template <unsigned N> struct WDTaquin : std::array<unsigned, N * N> {
     std::vector<WDMove> ret;
     for (WDMove m : wd_moves) {
       if (is_possible_move(m)) {
-        // On s'en fout de refaire le move inverse en vrai
-        // de toute façon on ne génère pas les enfants
-        // d'une position connue
         ret.push_back(m);
       }
     }
@@ -72,6 +71,7 @@ template <unsigned N> struct WDTaquin : std::array<unsigned, N * N> {
       (*this)[blank * N + move.col] += 1;
       blank += 1;
     }
+    ++depth;
   }
 
   unsigned hash() const {
@@ -100,23 +100,74 @@ template <unsigned N> struct WDTaquin : std::array<unsigned, N * N> {
   }
 };
 
-template <unsigned N> std::set<unsigned> generate_table() {
-  auto root = WDTaquin<N>();
+template <unsigned N> auto vertical_wd(const Taquin<N> &taquin) {
+  WDTaquin<N> ret;
+  ret.fill(0);
+  for (unsigned r = 0; r < N; ++r) {
+    for (unsigned c = 0; c < N; ++c) {
+      if (taquin.blank != r * N + c) {
+
+        unsigned row_belong = (taquin[r * N + c] - 1) / N;
+        ++ret[r * N + row_belong];
+      }
+    }
+  }
+  return ret;
+}
+
+template <unsigned N> auto horizontal_wd(const Taquin<N> &taquin) {
+  WDTaquin<N> ret;
+  ret.fill(0);
+  for (unsigned c = 0; c < N; ++c) {
+    for (unsigned r = 0; r < N; ++r) {
+      if (taquin.blank != r * N + c) {
+        unsigned col_belong = (taquin[r * N + c] - 1) % N;
+        ++ret[c * N + col_belong];
+      }
+    }
+  }
+  return ret;
+}
+
+constexpr std::size_t TABLE_SIZES[5] = {
+    [0] = 1, [1] = 1, [2] = 4, [3] = 105, [4] = 24964};
+
+template <unsigned N> struct WDTable : std::array<uint8_t, TABLE_SIZES[N]> {
+  std::map<unsigned, unsigned> hash_to_index;
+
+  WDTable() { this->fill(UINT8_MAX); }
+
+  auto get_estimator() {
+    return [this](const Taquin<N> &taquin) {
+      auto v_wd = vertical_wd(taquin);
+      auto h_wd = horizontal_wd(taquin);
+
+      return (*this)[hash_to_index[v_wd.hash()]] +
+             (*this)[hash_to_index[h_wd.hash()]];
+    };
+  }
+};
+
+template <unsigned N> auto generate_table() {
+  WDTaquin<N> root;
   std::deque<WDTaquin<N>> queue{root};
-  std::set<unsigned> bag;
+  unsigned index = 0;
+  WDTable<N> table;
 
   while (queue.size() > 0) {
     auto wd = queue.back();
     unsigned h = wd.hash();
-    if (!bag.contains(h)) {
+    if (!table.hash_to_index.contains(h)) {
       for (auto m : wd.possible_moves()) {
         auto child = wd;
         child.apply(m);
         queue.push_front(child);
       }
+      table[index] = static_cast<uint8_t>(wd.depth);
+      table.hash_to_index[h] = index;
+      ++index;
     }
     queue.pop_back();
-    bag.insert(h);
   }
-  return bag;
+  return table;
 }
