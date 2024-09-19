@@ -1,4 +1,5 @@
 #pragma once
+#include "utils.hpp"
 #include <array>
 #include <cassert>
 #include <iomanip>
@@ -37,6 +38,22 @@ template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
 
   Taquin(const std::array<unsigned, N * N> &arr_in)
       : std::array<unsigned, N * N>{arr_in} {
+    blank = 0;
+    auto it = this->begin();
+    while (*it != 0) {
+      ++blank;
+      ++it;
+    }
+  }
+  Taquin(const std::string s) {
+    auto str_list = split(s, ' ');
+    assert(str_list.size() == N * N); // Wrong number of input values
+    for (unsigned k = 0; k < N * N; ++k) {
+      auto v = (unsigned)stoi(str_list[k]);
+      assert(v < N * N);
+      (*this)[k] = v;
+    }
+
     blank = 0;
     auto it = this->begin();
     while (*it != 0) {
