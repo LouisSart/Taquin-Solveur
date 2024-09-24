@@ -1,6 +1,7 @@
 #pragma once
 #include "taquin.hpp"
 #include <algorithm> // std::reverse
+#include <chrono>
 #include <deque>
 #include <memory>
 #include <vector>
@@ -66,6 +67,7 @@ Solutions<NodePtr> depth_first_search(const NodePtr root, const auto &estimate,
   Solutions<NodePtr> all_solutions;
   int node_counter = 0;
   std::deque<NodePtr> queue({root});
+  const auto start{std::chrono::steady_clock::now()};
 
   while (queue.size() > 0) {
     auto node = queue.back();
@@ -84,8 +86,11 @@ Solutions<NodePtr> depth_first_search(const NodePtr root, const auto &estimate,
     }
     assert(queue.size() < 1000000); // Avoiding memory flood
   }
+  const auto end{std::chrono::steady_clock::now()};
+  const std::chrono::duration<double> elapsed_seconds{end - start};
   if constexpr (verbose) {
-    std::cout << "Nodes generated: " << node_counter << std::endl;
+    std::cout << "nodes: " << node_counter << ", ";
+    std::cout << elapsed_seconds.count() << std::endl;
   }
   return all_solutions;
 }
@@ -98,10 +103,12 @@ Solutions<NodePtr> IDAstar(const NodePtr root, const auto &estimate,
   Solutions<NodePtr> solutions;
   while (solutions.size() == 0 && search_depth <= max_depth) {
     if constexpr (verbose) {
-      std::cout << "Searching at depth " << search_depth << std::endl;
+      std::cout << "Searching at depth ";
+      std::cout << std::setw(2) << search_depth << ", ";
     }
     solutions = depth_first_search<verbose>(root, estimate, search_depth);
-    ++search_depth;
+    search_depth +=
+        2; // Parity of solution length is preserved in taquin solving
   }
 
   if constexpr (verbose) {
