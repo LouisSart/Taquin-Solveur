@@ -3,7 +3,7 @@
 #include "utils.hpp"
 #include <cstdint>
 #include <deque>
-#include <map>
+#include <unordered_map>
 
 struct WDMove {
   Move m;
@@ -106,7 +106,6 @@ template <unsigned N> auto vertical_wd(const Taquin<N> &taquin) {
   for (unsigned r = 0; r < N; ++r) {
     for (unsigned c = 0; c < N; ++c) {
       if (taquin.blank != r * N + c) {
-
         unsigned row_belong = (taquin[r * N + c] - 1) / N;
         ++ret[r * N + row_belong];
       }
@@ -133,7 +132,7 @@ constexpr std::size_t TABLE_SIZES[5] = {
     [0] = 1, [1] = 1, [2] = 4, [3] = 105, [4] = 24964};
 
 template <unsigned N> struct WDTable : std::array<uint8_t, TABLE_SIZES[N]> {
-  std::map<unsigned, unsigned> hash_to_index;
+  std::unordered_map<unsigned, unsigned> hash_to_index;
 
   WDTable() { this->fill(UINT8_MAX); }
 
@@ -148,7 +147,7 @@ template <unsigned N> struct WDTable : std::array<uint8_t, TABLE_SIZES[N]> {
   }
 };
 
-template <unsigned N> auto generate_table() {
+template <unsigned N> auto generate_wd_table() {
   WDTaquin<N> root;
   std::deque<WDTaquin<N>> queue{root};
   unsigned index = 0;
@@ -169,5 +168,33 @@ template <unsigned N> auto generate_table() {
     }
     queue.pop_back();
   }
+
+  return table;
+}
+
+template <unsigned N> auto load_wd_table() {
+  std::filesystem::path table_dir = "pruning_tables";
+  auto filename = table_dir / ("wd_" + std::to_string(N) + "_table.dat");
+  auto mapname = table_dir / ("wd_" + std::to_string(N) + "_hash_to_index.dat");
+  WDTable<N> table;
+
+  if (fs::exists(filename)) {
+    load_binary(filename, table.data(), table.size());
+    table.hash_to_index =
+        load_map_binary<unsigned, unsigned, table.size()>(mapname);
+  } else {
+    std::cout << "Pruning table not found, generating" << std::endl;
+    table = generate_wd_table<N>();
+    fs::create_directories(table_dir);
+    write_binary(filename, table.data(), table.size());
+    write_map_binary<unsigned, unsigned, table.size()>(mapname,
+                                                       table.hash_to_index);
+  }
+
+  for (auto k : table) {
+    assert(k >= 0);
+    assert(k < UINT8_MAX);
+  }
+
   return table;
 }
