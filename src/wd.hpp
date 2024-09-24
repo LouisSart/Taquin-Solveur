@@ -103,6 +103,7 @@ template <unsigned N> struct WDTaquin : std::array<unsigned, N * N> {
 template <unsigned N> auto vertical_wd(const Taquin<N> &taquin) {
   WDTaquin<N> ret;
   ret.fill(0);
+  ret.blank = taquin.blank / N;
   for (unsigned r = 0; r < N; ++r) {
     for (unsigned c = 0; c < N; ++c) {
       if (taquin.blank != r * N + c) {
@@ -117,6 +118,7 @@ template <unsigned N> auto vertical_wd(const Taquin<N> &taquin) {
 template <unsigned N> auto horizontal_wd(const Taquin<N> &taquin) {
   WDTaquin<N> ret;
   ret.fill(0);
+  ret.blank = taquin.blank % N;
   for (unsigned c = 0; c < N; ++c) {
     for (unsigned r = 0; r < N; ++r) {
       if (taquin.blank != r * N + c) {

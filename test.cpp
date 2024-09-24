@@ -29,7 +29,7 @@ void test_manhattan() {
 }
 
 void test_search() {
-  Taquin<3> taquin({8, 0, 6, 5, 4, 7, 2, 3, 1});
+  Taquin<3> taquin("8 0 6 5 4 7 2 3 1");
 
   auto root = make_root(taquin);
   auto solutions = IDAstar<false>(root, manhattan<3>);
@@ -45,10 +45,9 @@ void test_wd() {
   wd3.apply({D, 1});
   wd3.apply({D, 2});
 
-  auto table3 = generate_table<3>();
+  auto table3 = generate_wd_table<3>();
 
-  Taquin<3> t3({8, 0, 4, 3, 1, 5, 6, 2, 7});
-
+  Taquin<3> t3("8 0 4 3 1 5 6 2 7");
   auto root = make_root(t3);
   auto solutions = IDAstar<false>(root, table3.get_estimator());
   assert(solutions.size() == 1);
