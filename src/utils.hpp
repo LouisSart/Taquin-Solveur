@@ -102,3 +102,57 @@ auto load_map_binary(const std::filesystem::path &map_path) {
 
   return ret;
 }
+
+constexpr int ipow(int k, unsigned n) {
+  // integer power
+  // computes ret = k^n
+  // k can be negative hence using int
+  unsigned ret{1};
+  for (unsigned i = 0; i < n; i++) {
+    ret *= k;
+  }
+  return ret;
+};
+
+static constexpr unsigned N_PRECOMP = 16;
+
+constexpr auto factorial_table = [] {
+  std::array<unsigned, N_PRECOMP + 1> arr = {};
+  arr[0] = 1;
+  for (unsigned n = 1; n <= N_PRECOMP; ++n) {
+    arr[n] = n * arr[n - 1];
+  }
+  return arr;
+}();
+
+constexpr unsigned factorial(unsigned n) {
+  assert(n <= N_PRECOMP);
+  return factorial_table[n];
+}
+
+constexpr auto binomial_table = [] {
+  // Using constexpr lambda to fill up binomial table
+  // at compile time
+  std::array<unsigned, (N_PRECOMP + 1) * (N_PRECOMP + 1)> arr = {};
+  for (unsigned n = 0; n <= N_PRECOMP; ++n) {
+    for (unsigned k = 0; k <= N_PRECOMP; ++k) {
+      if (n < k) {
+        arr[n * N_PRECOMP + 1 + k] = 0;
+      } else if (k == 0 || k == n) {
+        arr[n * N_PRECOMP + 1 + k] = 1;
+      } else {
+        arr[n * N_PRECOMP + 1 + k] = arr[(n - 1) * N_PRECOMP + 1 + k - 1] +
+                                     arr[(n - 1) * N_PRECOMP + 1 + k];
+      }
+    }
+  }
+  return arr;
+}();
+
+constexpr unsigned binomial(unsigned n, unsigned k) {
+  // The function just does a lookup in the table for better performance
+  assert(n >= 0 && k >= 0); // "No negative values"
+  assert(n < N_PRECOMP + 1 &&
+         k < N_PRECOMP + 1); // "Binomial numbers computed up to n=16"
+  return binomial_table[n * N_PRECOMP + 1 + k];
+}
