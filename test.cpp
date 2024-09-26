@@ -64,7 +64,8 @@ void test_fringe() {
   assert(permutation_index(t) == 5);
 }
 
-std::array<uint8_t, FringeConstants<4>::TABLE_SIZE> table;
+constexpr unsigned N = 3;
+std::array<uint8_t, Fringe<N>::TABLE_SIZE> table;
 
 int main() {
   test_possible_moves();
@@ -73,7 +74,7 @@ int main() {
   test_wd();
   test_fringe();
 
-  generate_fringe_table<4, true>(table);
+  generate_fringe_table<N, true>(table);
 
   return 0;
 }
