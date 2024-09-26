@@ -125,25 +125,41 @@ bool blank_was_seen(const uint16_t &h, const unsigned &blank) {
   return (h / ipow(2, blank)) % 2;
 }
 
-template <unsigned N> auto generate_fringe_table() {
-  constexpr unsigned N_LAYOUT = binomial(N * N, 2 * N - 1);
-  constexpr unsigned N_PERM = factorial(2 * N - 1);
-  constexpr unsigned TABLE_SIZE = N_LAYOUT * N_PERM;
+template <unsigned N> struct FringeConstants {
+  static constexpr unsigned N_TILES = N * N;
+  static constexpr unsigned N_FRINGE_TILES = 2 * N - 1;
+  static constexpr unsigned N_LAYOUT = binomial(N * N, 2 * N - 1);
+  static constexpr unsigned N_PERM = factorial(2 * N - 1);
+  static constexpr unsigned TABLE_SIZE = N_LAYOUT * N_PERM;
+};
+
+template <unsigned N, bool verbose = false>
+auto generate_fringe_table(
+    std::array<uint8_t, FringeConstants<N>::TABLE_SIZE> &table) {
+
+  auto SIZE = FringeConstants<N>::TABLE_SIZE;
 
   FringeTaquin<N> root;
-  std::array<uint16_t, TABLE_SIZE> blank_tracker;
-  blank_tracker.fill(0);
+  table.fill(0);
+  std::unique_ptr<uint16_t[]> blank_tracker{new uint16_t[SIZE]};
+  for (unsigned k = 0; k < SIZE; ++k) {
+    blank_tracker[k] = 0;
+  }
   std::deque<FringeTaquin<N>> queue{root};
-  unsigned counter = 0;
+  unsigned counter = 0, int_percent = 0;
+  const auto start{std::chrono::steady_clock::now()};
 
   while (queue.size() > 0) {
     auto ft = queue.back();
     unsigned k = fringe_index(ft);
-    assert(k < TABLE_SIZE);
+    assert(k < SIZE);
+    if (table[k] == 0)
+      table[k] = ft.depth;
     if (!blank_was_seen(blank_tracker[k], ft.blank)) {
       for (auto m : ft.possible_moves()) {
         auto child = ft;
         child.apply(m);
+        child.depth = ft.depth + 1;
         queue.push_front(child);
       }
       blank_tracker[k] += (uint16_t)ipow(2, ft.blank);
@@ -151,7 +167,16 @@ template <unsigned N> auto generate_fringe_table() {
       ++counter;
     }
     queue.pop_back();
+    if constexpr (verbose) {
+      auto percent = ((double)counter / (SIZE * (N - 1) * (N - 1))) * 100.0;
+      if (percent > int_percent) {
+        const auto end{std::chrono::steady_clock::now()};
+        const std::chrono::duration<double> elapsed_seconds{end - start};
+        ++int_percent;
+        print(int_percent, "%   ", elapsed_seconds.count());
+      }
+    }
   }
-
-  // return blank_tracker;
+  write_binary("pruning_tables/fringe_" + std::to_string(N) + ".dat",
+               table.data(), SIZE);
 }

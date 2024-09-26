@@ -1,3 +1,4 @@
+#include "src/fringe.hpp"
 #include "src/manhattan.hpp"
 #include "src/search.hpp"
 #include "src/taquin.hpp"
@@ -54,10 +55,25 @@ void test_wd() {
   assert(solutions[0]->get_path().size() == 23);
 }
 
+void test_fringe() {
+  auto t = FringeTaquin<4>();
+  assert(permutation_index(t) == 0);
+  t.apply({U, U, L, L, L, D, D, R, R, U, U, L, L, D});
+  t.show();
+  assert(layout_index(t) == 0);
+  assert(permutation_index(t) == 5);
+}
+
+std::array<uint8_t, FringeConstants<4>::TABLE_SIZE> table;
+
 int main() {
   test_possible_moves();
   test_manhattan();
   test_search();
   test_wd();
+  test_fringe();
+
+  generate_fringe_table<4, true>(table);
+
   return 0;
 }
