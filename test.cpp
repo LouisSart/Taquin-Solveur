@@ -62,6 +62,8 @@ void test_fringe() {
   t.show();
   assert(layout_index(t) == 0);
   assert(permutation_index(t) == 5);
+
+  taquin_from_fringe_index<4>(57657599).show();
 }
 
 constexpr unsigned N = 3;
@@ -74,7 +76,9 @@ int main() {
   test_wd();
   test_fringe();
 
-  generate_fringe_table<N, true>(table);
+  // generate_fringe_table<N, true>(table);
+  generate_fringe_table_backwards<N>(table);
+  // print_array<uint8_t, 15120, int>(table);
 
   return 0;
 }

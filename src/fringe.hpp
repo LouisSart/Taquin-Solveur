@@ -177,29 +177,36 @@ template <unsigned N> auto taquin_from_fringe_index(const unsigned &index) {
   return ret;
 }
 
-// template <unsigned N>
-// void generate_fringe_table_backwards(
-//     std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
-//   assert(p_table.size() == Fringe<N>::TABLE_SIZE);
+template <unsigned N>
+void generate_fringe_table_backwards(
+    std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
+  assert(table.size() == Fringe<N>::TABLE_SIZE);
+  table.fill(UINT8_MAX);
+  table[fringe_index(FringeTaquin<N>())] = 0;
+  unsigned encountered = 1, depth = 1;
 
-//   while (advancement.encountered < p_table.size()) {
-//     for (unsigned k = 0; k < p_table.size(); ++k) {
-//       if (p_table[k] == PruningTable::unassigned) {
-//         auto node = GenNode{strat.from_index(k),
-//         PruningTable::unassigned}; auto children = node.expand(m_table);
-//         for (auto &&child : children) {
-//           advancement.add_generated();
-//           auto table_entry = strat.index(child.state);
-//           auto child_depth = p_table[table_entry];
-//           if (child_depth == advancement.depth - 1) {
-//             advancement.add_encountered();
-//             p_table[k] = child_depth + 1;
-//             break;
-//           }
-//         }
-//       }
-//     }
-//     advancement.update();
-//     assert(advancement.depth < 21);
-//   }
-// }
+  while (encountered < Fringe<N>::TABLE_SIZE) {
+    for (unsigned k = 0; k < Fringe<N>::TABLE_SIZE; ++k) {
+      if (table[k] == depth - 1) {
+        auto ft = taquin_from_fringe_index<N>(k);
+        for (unsigned b = 0; b < Fringe<N>::N_TILES; ++b) {
+          if (!Fringe<N>::is_fringe_tile(ft[b])) {
+            ft.blank = b;
+            for (auto move : ft.possible_moves()) {
+              auto child = ft;
+              child.apply(move);
+              auto kc = fringe_index(child);
+              if (table[kc] == UINT8_MAX) {
+                table[kc] = depth + 1;
+                ++encountered;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    print(depth, encountered);
+    ++depth;
+  }
+}
