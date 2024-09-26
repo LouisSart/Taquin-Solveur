@@ -27,8 +27,23 @@ template <unsigned N> struct Fringe {
     }
     return ret;
   }();
+  static constexpr std::array<unsigned, N_FRINGE_TILES> order = [] {
+    std::array<unsigned, N_FRINGE_TILES> ret;
+    for (unsigned k = 0; k < N; ++k) {
+      ret[k] = k + 1;
+    }
+    for (unsigned k = N; k < N_FRINGE_TILES; ++k) {
+      ret[k] = (k - N + 1) * N + 1;
+    }
+    return ret;
+  }();
 
-  static bool is_fringe_tile(const unsigned &tile) { return mask[tile]; }
+  static bool is_fringe_tile(const unsigned &tile) {
+    if (tile >= N_TILES)
+      return false;
+    else
+      return mask[tile];
+  }
 };
 
 template <unsigned N> struct FringeTaquin : Taquin<N> {
@@ -84,8 +99,7 @@ template <unsigned N> unsigned layout_index(const FringeTaquin<N> &ft) {
 }
 
 template <unsigned N> unsigned fringe_index(const FringeTaquin<N> &ft) {
-  static unsigned N_PERM = factorial(2 * N - 1);
-  return layout_index(ft) * N_PERM + permutation_index(ft);
+  return layout_index(ft) * Fringe<N>::N_PERM + permutation_index(ft);
 }
 
 bool blank_was_seen(const uint16_t &h, const unsigned &blank) {
@@ -94,9 +108,9 @@ bool blank_was_seen(const uint16_t &h, const unsigned &blank) {
 
 template <unsigned N, bool verbose = false>
 auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
+  assert(table.size() == Fringe<N>::TABLE_SIZE);
 
   auto SIZE = Fringe<N>::TABLE_SIZE;
-
   FringeTaquin<N> root;
   table.fill(0);
   std::unique_ptr<uint16_t[]> blank_tracker{new uint16_t[SIZE]};
@@ -138,3 +152,54 @@ auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
   write_binary("pruning_tables/fringe_" + std::to_string(N) + ".dat",
                table.data(), SIZE);
 }
+
+template <unsigned N> auto taquin_from_fringe_index(const unsigned &index) {
+  assert(index < Fringe<N>::TABLE_SIZE);
+  unsigned layout_index = index / Fringe<N>::N_PERM;
+  unsigned perm_index = index % Fringe<N>::N_PERM;
+
+  std::array<unsigned, Fringe<N>::N_TILES> layout;
+  std::array<unsigned, Fringe<N>::N_FRINGE_TILES> permutation;
+
+  layout_from_index(layout_index, layout, Fringe<N>::N_FRINGE_TILES);
+  permutation_from_index(perm_index, permutation);
+
+  FringeTaquin<N> ret;
+  ret.fill(Fringe<N>::N_TILES);
+  unsigned tile = 0;
+  for (unsigned k = 0; k < N * N; ++k) {
+    if (layout[k] == 1) {
+      ret[k] = Fringe<N>::order[permutation[tile]];
+      ++tile;
+    } else
+      ret.blank = k;
+  }
+  return ret;
+}
+
+// template <unsigned N>
+// void generate_fringe_table_backwards(
+//     std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
+//   assert(p_table.size() == Fringe<N>::TABLE_SIZE);
+
+//   while (advancement.encountered < p_table.size()) {
+//     for (unsigned k = 0; k < p_table.size(); ++k) {
+//       if (p_table[k] == PruningTable::unassigned) {
+//         auto node = GenNode{strat.from_index(k),
+//         PruningTable::unassigned}; auto children = node.expand(m_table);
+//         for (auto &&child : children) {
+//           advancement.add_generated();
+//           auto table_entry = strat.index(child.state);
+//           auto child_depth = p_table[table_entry];
+//           if (child_depth == advancement.depth - 1) {
+//             advancement.add_encountered();
+//             p_table[k] = child_depth + 1;
+//             break;
+//           }
+//         }
+//       }
+//     }
+//     advancement.update();
+//     assert(advancement.depth < 21);
+//   }
+// }

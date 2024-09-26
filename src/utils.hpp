@@ -156,3 +156,35 @@ constexpr unsigned binomial(unsigned n, unsigned k) {
          k < N_PRECOMP + 1); // "Binomial numbers computed up to n=16"
   return binomial_table[n * N_PRECOMP + 1 + k];
 }
+
+template <std::size_t n>
+void permutation_from_index(unsigned c, std::array<unsigned, n> &perm) {
+  perm[n - 1] = 0;
+  for (unsigned i = n - 1; i > 0; --i) {
+    perm[i - 1] = (c % (n - i + 1));
+    c = c / (n - i + 1);
+    for (auto j = i + 1; j <= n; ++j) {
+      if (perm[j - 1] >= perm[i - 1]) {
+        perm[j - 1] = perm[j - 1] + 1;
+      }
+    }
+  }
+}
+
+template <std::size_t n>
+void layout_from_index(unsigned c, std::array<unsigned, n> &layout,
+                       unsigned r) {
+  // n: number of positions
+  // r: number of pieces
+  assert(r <= n);
+  assert(c < binomial(n, r));
+  for (int i = n - 1; i >= 0; --i) {
+    if (c >= binomial(i, r)) {
+      c = c - binomial(i, r);
+      layout[i] = 1;
+      r = r - 1;
+    } else {
+      layout[i] = 0;
+    }
+  }
+}
