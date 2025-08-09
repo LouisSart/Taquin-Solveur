@@ -56,14 +56,13 @@ void test_wd() {
 }
 
 void test_fringe() {
-  auto t = FringeTaquin<4>();
+  auto t = Taquin<4>();
   assert(permutation_index(t) == 0);
   t.apply({U, U, L, L, L, D, D, R, R, U, U, L, L, D});
-  t.show();
   assert(layout_index(t) == 0);
   assert(permutation_index(t) == 5);
-
-  taquin_from_fringe_index<4>(57657599).show();
+  assert(neighbours<4>(14).size() == 3);
+  assert(neighbours<4>(15).size() == 2);
 }
 
 constexpr unsigned N = 3;
@@ -75,10 +74,6 @@ int main() {
   test_search();
   test_wd();
   test_fringe();
-
-  // generate_fringe_table<N, true>(table);
-  generate_fringe_table_backwards<N>(table);
-  // print_array<uint8_t, 15120, int>(table);
 
   return 0;
 }
