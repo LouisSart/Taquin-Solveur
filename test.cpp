@@ -59,8 +59,6 @@ void test_fringe() {
   auto t = Taquin<4>();
   t.apply({U, U, L, L, L, D, D, R, R, U, U, L, L, D});
   assert(permutation_index(t) == 5927);
-  assert(neighbours<4>(14).size() == 3);
-  assert(neighbours<4>(15).size() == 2);
   assert(Fringe<4>::TABLE_SIZE == 518918400);
 }
 

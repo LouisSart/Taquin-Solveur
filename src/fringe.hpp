@@ -53,33 +53,13 @@ template <unsigned N> unsigned layout_index(const Taquin<N> &ft) {
   return t;
 }
 
-// template <unsigned N>
-// void swap(Taquin<N> &taquin, const unsigned &pos, const unsigned &target) {
-//   unsigned buf = taquin[target];
-//   taquin[target] = taquin[pos];
-//   taquin[pos] = buf;
-// }
-
-template <unsigned N> std::vector<unsigned> neighbours(const unsigned &pos) {
-  std::vector<unsigned> ret;
-
-  if (pos / N != 0)
-    ret.push_back(pos - N);
-  if (pos / N != N - 1)
-    ret.push_back(pos + N);
-  if (pos % N != 0)
-    ret.push_back(pos - 1);
-  if (pos % N != N - 1)
-    ret.push_back(pos + 1);
-
-  return ret;
-}
-
 template <unsigned N> unsigned fringe_index(const Taquin<N> &ft) {
   return layout_index(ft) * Fringe<N>::N_PERM + permutation_index(ft);
 }
 
 template <unsigned N> std::deque<Taquin<N>> init_queue() {
+  // There are (N - 1) ** 2 states that are at depth 0
+  // which are hard coded below
   std::deque<Taquin<N>> ret;
   if constexpr (N == 4) {
     ret.emplace_back("1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 0");
@@ -140,8 +120,6 @@ auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
         ++search_depth;
       }
     }
-    // taquin.show();
-    // print(index);
 
     // Loop over children of that state
     for (Taquin<N> child : get_children(taquin)) {
