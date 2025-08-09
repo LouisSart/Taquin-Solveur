@@ -65,7 +65,7 @@ void test_fringe() {
   assert(neighbours<4>(15).size() == 2);
 }
 
-constexpr unsigned N = 3;
+constexpr unsigned N = 4;
 std::array<uint8_t, Fringe<N>::TABLE_SIZE> table;
 
 int main() {
@@ -74,6 +74,8 @@ int main() {
   test_search();
   test_wd();
   test_fringe();
+
+  generate_fringe_table<N, true>(table);
 
   return 0;
 }

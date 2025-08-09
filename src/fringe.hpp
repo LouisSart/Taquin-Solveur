@@ -63,23 +63,23 @@ template <unsigned N> unsigned permutation_index(const Taquin<N> &ft) {
 }
 
 template <unsigned N>
-void swap(Taquin<N> &taquin, const unsigned &start, const unsigned &target) {
+void swap(Taquin<N> &taquin, const unsigned &pos, const unsigned &target) {
   unsigned buf = taquin[target];
-  taquin[target] = taquin[start];
-  taquin[start] = buf;
+  taquin[target] = taquin[pos];
+  taquin[pos] = buf;
 }
 
-template <unsigned N> std::vector<unsigned> neighbours(const unsigned &tile) {
+template <unsigned N> std::vector<unsigned> neighbours(const unsigned &pos) {
   std::vector<unsigned> ret;
 
-  if (tile / N != 0)
-    ret.push_back(tile - N);
-  if (tile / N != N - 1)
-    ret.push_back(tile + N);
-  if (tile % N != 0)
-    ret.push_back(tile - 1);
-  if (tile % N != N - 1)
-    ret.push_back(tile + 1);
+  if (pos / N != 0)
+    ret.push_back(pos - N);
+  if (pos / N != N - 1)
+    ret.push_back(pos + N);
+  if (pos % N != 0)
+    ret.push_back(pos - 1);
+  if (pos % N != N - 1)
+    ret.push_back(pos + 1);
 
   return ret;
 }
@@ -106,41 +106,63 @@ template <unsigned N> unsigned fringe_index(const Taquin<N> &ft) {
 //   return (h / ipow(2, blank)) % 2;
 // }
 
-// template <unsigned N, bool verbose = false>
-// auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table)
-// {
-//   assert(table.size() == Fringe<N>::TABLE_SIZE);
+template <unsigned N, bool verbose = false>
+auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
+  assert(table.size() == Fringe<N>::TABLE_SIZE);
 
-//   unsigned counter = 0, int_percent = 0;
-//   const auto start{std::chrono::steady_clock::now()};
+  unsigned counter = 1, int_percent = 0;
+  const auto start{std::chrono::steady_clock::now()};
 
-//   Taquin<N> root;
-//   table.fill(UINT8_MAX);
-//   table[fringe_index(root)] = 0;
-//   std::deque<Taquin<N>> queue{root};
+  Taquin<N> root;
+  table.fill(UINT8_MAX);
+  table[fringe_index(root)] = 0;
+  std::deque<Taquin<N>> queue{root};
 
-//   while (queue.size() > 0) {
-//     auto taquin = queue.back();
-//     unsigned index = fringe_index(taquin);
-//     unsigned depth = table[index];
+  while (queue.size() > 0) {
+    auto taquin = queue.back();
+    unsigned index = fringe_index(taquin);
+    unsigned depth = table[index];
 
-//     for (unsigned target :)
-//       ++counter;
-//   }
-//   queue.pop_back();
-//   if constexpr (verbose) {
-//     auto percent = ((double)counter / (SIZE * (N - 1) * (N - 1))) * 100.0;
-//     if (percent > int_percent) {
-//       const auto end{std::chrono::steady_clock::now()};
-//       const std::chrono::duration<double> elapsed_seconds{end - start};
-//       ++int_percent;
-//       print(int_percent, "%   ", elapsed_seconds.count());
-//     }
-//   }
-// }
-// write_binary("pruning_tables/fringe_" + std::to_string(N) + ".dat",
-//              table.data(), SIZE);
-// }
+    // Loop over fringe tile locations
+    for (unsigned pos = 0; pos < Taquin<N>::NTILES; ++pos) {
+      if (Fringe<N>::is_fringe_tile(taquin[pos])) {
+        // Loop over "legal" targets for that fringe tile
+        for (unsigned target : neighbours<N>(pos)) {
+          if (!Fringe<N>::is_fringe_tile(taquin[target])) {
+            // Generate a child by swapping the fringe tile at pos with its
+            // neighbour at target
+            Taquin<N> child = taquin;
+            swap(child, pos, target);
+            unsigned c_index = fringe_index(child);
+
+            // If this child is a newly encountered state, store its depth
+            // and put it in front of the queue
+            if (table[c_index] == UINT8_MAX) {
+              table[c_index] = depth + 1;
+              queue.push_front(child);
+              ++counter;
+            }
+          }
+        }
+      }
+    }
+
+    queue.pop_back();
+
+    if constexpr (verbose) {
+      auto percent = ((double)counter / Fringe<N>::TABLE_SIZE) * 100.0;
+      if (percent > int_percent) {
+        const auto end{std::chrono::steady_clock::now()};
+        const std::chrono::duration<double> elapsed_seconds{end - start};
+        ++int_percent;
+        print(depth, int_percent, "%   ", elapsed_seconds.count());
+      }
+    }
+  }
+
+  write_binary("pruning_tables/fringe_" + std::to_string(N) + ".dat",
+               table.data(), Fringe<N>::TABLE_SIZE);
+}
 
 // template <unsigned N> auto taquin_from_fringe_index(const unsigned &index) {
 //   assert(index < Fringe<N>::TABLE_SIZE);
