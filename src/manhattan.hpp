@@ -4,11 +4,11 @@
 #include <cstdlib>
 
 template <unsigned N> unsigned manhattan(const Taquin<N> &taquin) {
-  unsigned NTILES = Taquin<N>::NTILES;
+  unsigned N_TILES = Taquin<N>::N_TILES;
   unsigned ret = 0;
   int i_is, j_is, i_belongs, j_belongs;
 
-  for (unsigned k = 0; k < NTILES; ++k) {
+  for (unsigned k = 0; k < N_TILES; ++k) {
     auto t = taquin[k];
     if (k != taquin.blank) {
       i_is = k / N;

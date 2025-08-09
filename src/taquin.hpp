@@ -27,11 +27,11 @@ std::ostream &operator<<(std::ostream &os, const Sequence &seq) {
 }
 
 template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
-  static constexpr unsigned NTILES = N * N;
+  static constexpr unsigned N_TILES = N * N;
   unsigned blank;
 
-  Taquin() : blank{NTILES - 1} {
-    for (unsigned k = 0; k < NTILES - 1; ++k)
+  Taquin() : blank{N_TILES - 1} {
+    for (unsigned k = 0; k < N_TILES - 1; ++k)
       (*this)[k] = k + 1;
     (*this)[blank] = 0;
   }
@@ -114,9 +114,9 @@ template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
   }
 
   bool is_solved() const {
-    if (blank != NTILES - 1)
+    if (blank != N_TILES - 1)
       return false;
-    for (unsigned k = 0; k < NTILES - 1; ++k) {
+    for (unsigned k = 0; k < N_TILES - 1; ++k) {
       if ((*this)[k] != k + 1)
         return false;
     }
