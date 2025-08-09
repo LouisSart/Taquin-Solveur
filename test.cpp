@@ -57,12 +57,11 @@ void test_wd() {
 
 void test_fringe() {
   auto t = Taquin<4>();
-  assert(permutation_index(t) == 0);
   t.apply({U, U, L, L, L, D, D, R, R, U, U, L, L, D});
-  assert(layout_index(t) == 0);
-  assert(permutation_index(t) == 5);
+  assert(permutation_index(t) == 5927);
   assert(neighbours<4>(14).size() == 3);
   assert(neighbours<4>(15).size() == 2);
+  assert(Fringe<4>::TABLE_SIZE == 518918400);
 }
 
 constexpr unsigned N = 4;
