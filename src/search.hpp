@@ -47,6 +47,7 @@ template <unsigned N> typename Node<N>::sptr make_root(const Taquin<N> &t) {
 }
 
 template <typename NodePtr> struct Solutions : public std::vector<NodePtr> {
+  unsigned best_hope = 80;
   void sort_by_depth() {
     std::sort(this->begin(), this->end(),
               [](const NodePtr node1, const NodePtr node2) {
@@ -63,20 +64,20 @@ template <typename NodePtr> struct Solutions : public std::vector<NodePtr> {
 
 template <bool verbose = true, typename NodePtr>
 Solutions<NodePtr> depth_first_search(const NodePtr root, const auto &estimate,
+                                      const auto &is_solved,
                                       const unsigned max_depth = 4) {
-  Solutions<NodePtr> all_solutions;
+  Solutions<NodePtr> solutions;
   int node_counter = 0;
   std::deque<NodePtr> queue({root});
   const auto start{std::chrono::steady_clock::now()};
 
   while (queue.size() > 0) {
     auto node = queue.back();
+    queue.pop_back();
     ++node_counter;
-    if (node->state.is_solved()) {
-      all_solutions.push_back(node);
-      queue.pop_back();
+    if (is_solved(node->state)) {
+      solutions.push_back(node);
     } else {
-      queue.pop_back();
       if (node->depth + estimate(node->state) <= max_depth) {
         auto children = node->expand();
         for (auto &&child : children) {
@@ -84,6 +85,12 @@ Solutions<NodePtr> depth_first_search(const NodePtr root, const auto &estimate,
         }
       }
     }
+
+    unsigned hope = node->depth + estimate(node->state);
+    if (hope > max_depth) {
+      solutions.best_hope = std::min(solutions.best_hope, hope);
+    }
+
     assert(queue.size() < 1000000); // Avoiding memory flood
   }
   const auto end{std::chrono::steady_clock::now()};
@@ -92,11 +99,12 @@ Solutions<NodePtr> depth_first_search(const NodePtr root, const auto &estimate,
     std::cout << "nodes: " << node_counter << ", ";
     std::cout << elapsed_seconds.count() << std::endl;
   }
-  return all_solutions;
+  return solutions;
 }
 
 template <bool verbose = true, typename NodePtr>
 Solutions<NodePtr> IDAstar(const NodePtr root, const auto &estimate,
+                           const auto &is_solved,
                            const unsigned max_depth = 80) {
   unsigned search_depth = estimate(root->state);
 
@@ -106,9 +114,9 @@ Solutions<NodePtr> IDAstar(const NodePtr root, const auto &estimate,
       std::cout << "Searching at depth ";
       std::cout << std::setw(2) << search_depth << ", ";
     }
-    solutions = depth_first_search<verbose>(root, estimate, search_depth);
-    search_depth +=
-        2; // Parity of solution length is preserved in taquin solving
+    solutions =
+        depth_first_search<verbose>(root, estimate, is_solved, search_depth);
+    search_depth = solutions.best_hope;
   }
 
   if constexpr (verbose) {

@@ -9,7 +9,7 @@ template <unsigned N> void solve(std::string input) {
   Taquin<N> taquin(input);
   taquin.show();
   auto root = make_root(taquin);
-  auto solutions = IDAstar<true>(root, table.get_estimator());
+  auto solutions = IDAstar<true>(root, table.get_estimator(), is_solved<N>);
   solutions.show();
 }
 

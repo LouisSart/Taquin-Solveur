@@ -137,3 +137,7 @@ template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
     }
   };
 };
+
+template <unsigned N> bool is_solved(const Taquin<N> &t) {
+  return t.is_solved();
+};
