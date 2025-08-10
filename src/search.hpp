@@ -47,7 +47,7 @@ template <unsigned N> typename Node<N>::sptr make_root(const Taquin<N> &t) {
 }
 
 template <typename NodePtr> struct Solutions : public std::vector<NodePtr> {
-  unsigned best_hope = 80;
+  unsigned best_hope = 150;
   void sort_by_depth() {
     std::sort(this->begin(), this->end(),
               [](const NodePtr node1, const NodePtr node2) {
@@ -105,8 +105,8 @@ Solutions<NodePtr> depth_first_search(const NodePtr root, const auto &estimate,
 template <bool verbose = true, typename NodePtr>
 Solutions<NodePtr> IDAstar(const NodePtr root, const auto &estimate,
                            const auto &is_solved,
-                           const unsigned max_depth = 80) {
-  unsigned search_depth = estimate(root->state);
+                           const unsigned max_depth = 150) {
+  unsigned search_depth = root->depth + estimate(root->state);
 
   Solutions<NodePtr> solutions;
   while (solutions.size() == 0 && search_depth <= max_depth) {
