@@ -9,13 +9,21 @@ Solve with:
 
 N is the puzzle size (e.g. N = 4 for the 15-puzzle). Only sizes 3 and 4 are implemented
 scramble is the sequence of tile numbers, row by row from left to right, with blank spaces as separator. The empty slot is numbered 0.
+Solved state for the 8-puzzle : "1 2 3 4 5 6 7 8 0"
+
+Move interpretation : 
+"R" means slide the right tile into the empty slot
+"L" means slide the left tile into the empty slot
+"U" means slide the upper tile into the empty slot
+"D" means slide the bottom tile into the empty slot
+
 Options : -f will only solve the fringe, that is the first row and first column only
           -2p will use the two phase solver, it finds close-to-optimal solutions very fast see below for info. (only for N = 4) 
 
 Examples (computation times may vary):
 
 $./solve 3 "0 8 1 7 2 6 3 5 4"
-[ x  8  1]
+[    8  1]
 [ 7  2  6]
 [ 3  5  4]
 Searching at depth 18, nodes: 9, 2.13e-05
@@ -28,7 +36,7 @@ D D R U U R D L L U R D D R U U L D D L U R D R (24)
 $./solve 4 "1 2 7 4 6 14 3 11 0 10 9 5 13 15 12 8"
 [ 1  2  7  4]
 [ 6 14  3 11]
-[ x 10  9  5]
+[   10  9  5]
 [13 15 12  8]
 Searching at depth 22, nodes: 15, 4.02e-05
 Searching at depth 24, nodes: 67, 0.000195501
@@ -41,7 +49,7 @@ R U U R D D R D L L U R U R U L L D L D R R U L L D R U R U R D D D (34)
 U U R R D D R D L L U R U L U L D D R R U R D D L U U L L D R D R R (34)
 
 $./solve 3 -f "0 1 2 3 4 5 6 7 8"
-[ x  1  2]
+[    1  2]
 [ 3  4  5]
 [ 6  7  8]
 Searching at depth 19, nodes: 36, 5.2241e-05
