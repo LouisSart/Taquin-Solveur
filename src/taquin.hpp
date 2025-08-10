@@ -128,7 +128,7 @@ template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
       std::cout << "[";
       for (unsigned c = 0; c < N; ++c) {
         if (r * N + c == blank)
-          std::cout << std::setw(2) << "x"
+          std::cout << std::setw(2) << " "
                     << " ";
         else
           std::cout << std::setw(2) << (*this)[r * N + c] << " ";
@@ -136,7 +136,43 @@ template <unsigned N> struct Taquin : std::array<unsigned, N * N> {
       std::cout << "\b]" << std::endl;
     }
   };
+
+  auto get_transposed() const {
+    Taquin<N> ret;
+    for (unsigned i = 0; i < N; ++i) {
+      for (unsigned j = 0; j < N; ++j) {
+        ret[i * N + j] = (*this)[j * N + i];
+      }
+    }
+    unsigned bi = blank / N, bj = blank % N;
+    ret.blank = bj * N + bi;
+
+    assert(ret[ret.blank] == 0);
+
+    return ret;
+  }
+
+  void scramble() {
+    srand(time(NULL));
+    unsigned nmoves = 1000 + rand() % 100;
+    for (unsigned k = 0; k < nmoves; ++k) {
+      auto moves = possible_moves();
+      unsigned i = rand() % moves.size();
+      apply(moves[i]);
+    }
+  }
 };
+
+template <unsigned N>
+bool operator==(const Taquin<N> &t1, const Taquin<N> &t2) {
+  for (unsigned k = 0; k < Taquin<N>::N_TILES; ++k) {
+    if (t1[k] != t2[k])
+      return false;
+  }
+  if (t1.blank != t2.blank)
+    return false;
+  return true;
+}
 
 template <unsigned N> bool is_solved(const Taquin<N> &t) {
   return t.is_solved();

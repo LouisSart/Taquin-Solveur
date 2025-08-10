@@ -4,6 +4,15 @@
 #include "src/taquin.hpp"
 #include "src/wd.hpp"
 
+void test_transpose() {
+  Taquin<4> taquin;
+  taquin.scramble();
+
+  auto invariant = taquin.get_transposed().get_transposed();
+
+  assert(taquin == invariant);
+}
+
 void test_possible_moves() {
   Taquin<4> taquin;
 
@@ -65,13 +74,17 @@ void test_fringe() {
 }
 
 int main() {
+  test_transpose();
   test_possible_moves();
   test_manhattan();
   test_search();
   test_wd();
   test_fringe();
 
-  solve_fringe<3>("0 1 2 3 4 5 6 7 8");
-  solve_fringe<4>("1 5 9 13 2 6 10 14 3 7 11 15 4 8 12 0");
+  // solve_fringe<3>("0 1 2 3 4 5 6 7 8");
+  // solve_fringe<4>("1 5 9 13 2 6 10 14 3 7 11 15 4 8 12 0");
+
+  // generate_fringe_table<4, true>(table4);
+
   return 0;
 }
