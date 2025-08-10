@@ -10,6 +10,7 @@ Solve with:
 N is the puzzle size (e.g. N = 4 for the 15-puzzle). Only sizes 3 and 4 are implemented
 scramble is the sequence of tile numbers, row by row from left to right, with blank spaces as separator. The empty slot is numbered 0.
 Options : -f will only solve the fringe, that is the first row and first column only
+          -2p will use the two phase solver, it finds close-to-optimal solutions very fast see below for info. (only for N = 4) 
 
 Examples (computation times may vary):
 
