@@ -2,6 +2,7 @@
 #include "src/manhattan.hpp"
 #include "src/search.hpp"
 #include "src/taquin.hpp"
+#include "src/twophase.hpp"
 #include "src/wd.hpp"
 
 void test_transpose() {
@@ -80,11 +81,6 @@ int main() {
   test_search();
   test_wd();
   test_fringe();
-
-  // solve_fringe<3>("0 1 2 3 4 5 6 7 8");
-  // solve_fringe<4>("1 5 9 13 2 6 10 14 3 7 11 15 4 8 12 0");
-
-  // generate_fringe_table<4, true>(table4);
 
   return 0;
 }
