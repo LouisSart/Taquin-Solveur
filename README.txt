@@ -76,3 +76,7 @@ solver on the resulting states. This gives close-to-optimal solutions in a very 
 
 Solutions lengths of the two phase algorithm on 80 optimal positions (17 antipodes for the 15 puzzle):
         {82 80 86 86 84 86 88 88 86 84 86 86 88 80 88 82 80}
+
+TO DO:
+Use the fringe table to improve pruning in optimal solver
+Use symmetry conjugation in pruning table building to accelerate generation
