@@ -42,3 +42,11 @@ template <typename Node> auto two_phase(Node &root) {
 
   return p2_sols;
 }
+
+auto solve_two_phase(std::string input) {
+  Taquin<4> taquin(input);
+  taquin.show();
+  auto root = make_root(taquin);
+  auto solutions = two_phase(root);
+  solutions.show();
+}
