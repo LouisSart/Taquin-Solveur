@@ -65,19 +65,5 @@ whole 15-puzzle, we can just generate every phase one optimal path, and then use
 solver on the resulting states. This gives close-to-optimal solutions in a very short amount of time
 (in fact, the bottleneck here is the loading of the pruning table for phase one, by a huge margin)
 
-Solutions lengths of the two phase algorithm on 80 optimal positions (antipodes for the 15 puzzle):
-
-   12 10 13 
-15 11 14  9 
- 3  7  6  2  
- 4  8  5  1 -> 88 moves
-
-[   12  9 13]
-[15 11 10 14]
-[ 3  7  2  5]
-[ 4  8  6  1] -> 82 moves
-
-[   12 10 13]
-[15 11 14  9]
-[ 3  7  2  5]
-[ 4  8  6  1] -> 80 (optimal !)
+Solutions lengths of the two phase algorithm on 80 optimal positions (17 antipodes for the 15 puzzle):
+        {82 80 86 86 84 86 88 88 86 84 86 86 88 80 88 82 80}
