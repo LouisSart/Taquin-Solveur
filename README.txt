@@ -45,3 +45,39 @@ $./solve 3 -f "0 1 2 3 4 5 6 7 8"
 [ 6  7  8]
 Searching at depth 19, nodes: 36, 5.2241e-05
 D R R U L L D D R U U R D L L U R R D (19)
+
+
+Two phase solver
+
+Phase one : solve the fringe (e.g. the top row and left column)
+Phase two : solve the remaining 8-puzzle in the bottom right corner
+Note that the pieces of the fringe are allowed to move in phase two,
+if it gives a shorter path to solved.
+
+I tried to build a two phase solver in the fashion of Kociemba. That is : try
+to find fringe solutions of increasing lengths until you find a finish of
+length 0. Unfortunately this doesn't work well because a longer fringe
+solution almost never leads to a shorter finish (which is the case for Domino
+reduction in Kociemba's algorithm).
+
+However, because god's number for phases 1 and 2 is way smaller than for the
+whole 15-puzzle, we can just generate every phase one optimal path, and then use a standard optimal
+solver on the resulting states. This gives close-to-optimal solutions in a very short amount of time
+(in fact, the bottleneck here is the loading of the pruning table for phase one, by a huge margin)
+
+Solutions lengths of the two phase algorithm on 80 optimal positions (antipodes for the 15 puzzle):
+
+   12 10 13 
+15 11 14  9 
+ 3  7  6  2  
+ 4  8  5  1 -> 88 moves
+
+[   12  9 13]
+[15 11 10 14]
+[ 3  7  2  5]
+[ 4  8  6  1] -> 82 moves
+
+[   12 10 13]
+[15 11 14  9]
+[ 3  7  2  5]
+[ 4  8  6  1] -> 80 (optimal !)
