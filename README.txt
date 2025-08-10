@@ -5,9 +5,11 @@ g++ -Wall -std=c++20 main.cpp -o solve
 
 Solve with:
 
-./solve [N] [scramble]
+./solve [N] [options] [scramble]
 
-where N is the puzzle size (for a 4x4, N=4) and the scramble is the sequence of tile numbers, row by row from left to right, with blank spaces as separator
+N is the puzzle size (e.g. N = 4 for the 15-puzzle). Only sizes 3 and 4 are implemented
+scramble is the sequence of tile numbers, row by row from left to right, with blank spaces as separator. The empty slot is numbered 0.
+Options : -f will only solve the fringe, that is the first row and first column only
 
 Examples (computation times may vary):
 
@@ -36,3 +38,10 @@ Searching at depth 32, nodes: 44263, 0.112801
 Searching at depth 34, nodes: 191470, 0.448967
 R U U R D D R D L L U R U R U L L D L D R R U L L D R U R U R D D D (34)
 U U R R D D R D L L U R U L U L D D R R U R D D L U U L L D R D R R (34)
+
+$./solve 3 -f "0 1 2 3 4 5 6 7 8"
+[ x  1  2]
+[ 3  4  5]
+[ 6  7  8]
+Searching at depth 19, nodes: 36, 5.2241e-05
+D R R U L L D D R U U R D L L U R R D (19)

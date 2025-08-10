@@ -57,13 +57,12 @@ void test_wd() {
 
 void test_fringe() {
   auto t = Taquin<4>();
+  assert(is_fringe_solved(t));
   t.apply({U, U, L, L, L, D, D, R, R, U, U, L, L, D});
+  assert(!is_fringe_solved(t));
   assert(permutation_index(t) == 5927);
   assert(Fringe<4>::TABLE_SIZE == 518918400);
 }
-
-constexpr unsigned N = 4;
-std::array<uint8_t, Fringe<N>::TABLE_SIZE> table;
 
 int main() {
   test_possible_moves();
@@ -72,7 +71,7 @@ int main() {
   test_wd();
   test_fringe();
 
-  generate_fringe_table<N, true>(table);
-
+  solve_fringe<3>("0 1 2 3 4 5 6 7 8");
+  solve_fringe<4>("1 5 9 13 2 6 10 14 3 7 11 15 4 8 12 0");
   return 0;
 }

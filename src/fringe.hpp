@@ -142,7 +142,64 @@ auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
     const std::chrono::duration<double> elapsed_seconds{end - start};
     print("Table generated in", elapsed_seconds.count());
   }
+}
 
-  write_binary("pruning_tables/fringe_" + std::to_string(N) + ".dat",
-               table.data(), Fringe<N>::TABLE_SIZE);
+template <unsigned N> bool is_fringe_solved(const Taquin<N> &taquin) {
+  for (unsigned k = 0; k < Taquin<N>::N_TILES; ++k) {
+    if (Fringe<N>::is_fringe_tile(taquin[k]) && taquin[k] != 0) {
+      if (taquin[k] != k + 1)
+        return false;
+    }
+  }
+  return true;
+};
+
+std::array<uint8_t, Fringe<3>::TABLE_SIZE> table3;
+std::array<uint8_t, Fringe<4>::TABLE_SIZE> table4;
+
+template <unsigned N>
+void load_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
+  std::filesystem::path table_dir = "pruning_tables";
+
+  auto filename = table_dir / ("fringe_" + std::to_string(N) + ".dat");
+
+  if (fs::exists(filename)) {
+    load_binary(filename, table.data(), table.size());
+  } else {
+    std::cout << "Pruning table not found, generating" << std::endl;
+    generate_fringe_table<N>(table);
+    fs::create_directories(table_dir);
+    write_binary(filename, table.data(), table.size());
+  }
+
+  for (auto k : table) {
+    assert(k >= 0);
+    assert(k < UINT8_MAX);
+  }
+}
+
+template <unsigned N> unsigned fringe_estimate(const Taquin<N> &taquin) {
+  if constexpr (N == 3) {
+    return table3[fringe_index(taquin)];
+  } else if constexpr (N == 4) {
+    return table4[fringe_index(taquin)];
+  } else {
+    assert(false);
+  }
+}
+
+template <unsigned N> auto solve_fringe(std::string input) {
+  if constexpr (N == 3) {
+    load_fringe_table<3>(table3);
+  } else if constexpr (N == 4) {
+    load_fringe_table<4>(table4);
+  } else {
+    assert(false);
+  }
+
+  Taquin<N> taquin(input);
+  taquin.show();
+  auto root = make_root(taquin);
+  auto solutions = IDAstar<true>(root, fringe_estimate<N>, is_fringe_solved<N>);
+  solutions.show();
 }

@@ -1,3 +1,4 @@
+#include "src/fringe.hpp"
 #include "src/manhattan.hpp"
 #include "src/search.hpp"
 #include "src/taquin.hpp"
@@ -15,14 +16,24 @@ template <unsigned N> void solve(std::string input) {
 
 int main(int argc, const char *argv[]) {
   unsigned N = std::stoi(argv[1]);
+  bool fringe = find_option("-f", argc, argv);
 
   if (N == 3) {
-    solve<3>(argv[argc - 1]);
+    if (fringe) {
+      solve_fringe<3>(argv[argc - 1]);
+    } else {
+      solve<3>(argv[argc - 1]);
+    }
   } else if (N == 4) {
-    solve<4>(argv[argc - 1]);
+    if (fringe) {
+      solve_fringe<4>(argv[argc - 1]);
+    } else {
+      solve<4>(argv[argc - 1]);
+    }
   } else {
-    print("Wrong input, use ./solve [N] [scramble]");
+    print("Wrong input, use ./solve [N] [options] [scramble]");
     print("with N = {3, 4}");
+    print("options : -f (only solve the fringe)");
   }
 
   return 0;
