@@ -179,5 +179,10 @@ Here are the distributions of fringe states for the 8-puzzle and 15-puzzle:
 61 518918400 / 518918400
 Table generated in 309.022
 
-TO DO:
-Use the fringe table to improve pruning in optimal solver
+Heuristic study :
+
+On 2M random scrambles,
+
+          Mean value   Win rate
+wd      |    39.5212 |   0.543711
+fringe  |    38.5075 |   0.351652
