@@ -139,7 +139,7 @@ template <unsigned N> struct WDTable : std::array<uint8_t, TABLE_SIZES[N]> {
   WDTable() { this->fill(UINT8_MAX); }
 
   auto get_estimator() {
-    return [this](const Taquin<N> &taquin) {
+    return [this](const Taquin<N> &taquin) -> unsigned {
       auto v_wd = vertical_wd(taquin);
       auto h_wd = horizontal_wd(taquin);
 

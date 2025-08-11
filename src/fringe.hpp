@@ -198,14 +198,6 @@ template <unsigned N> unsigned fringe_estimate(const Taquin<N> &taquin) {
 }
 
 template <unsigned N> auto solve_fringe(std::string input) {
-  if constexpr (N == 3) {
-    load_fringe_table<3>(table3);
-  } else if constexpr (N == 4) {
-    load_fringe_table<4>(table4);
-  } else {
-    assert(false);
-  }
-
   Taquin<N> taquin(input);
   taquin.show();
   auto root = make_root(taquin);

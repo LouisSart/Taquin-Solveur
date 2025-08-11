@@ -7,11 +7,18 @@
 #include "src/wd.hpp"
 
 template <unsigned N> void solve(std::string input) {
-  auto table = load_wd_table<N>();
+  auto wd_table = load_wd_table<N>();
+
+  auto wd_estimate = wd_table.get_estimator();
+  auto estimator = [&wd_estimate](const Taquin<N> &t) {
+    return std::max(wd_estimate(t), fringe_estimate<N>(t));
+  };
+
   Taquin<N> taquin(input);
+  print(wd_estimate(taquin), fringe_estimate(taquin));
   taquin.show();
   auto root = make_root(taquin);
-  auto solutions = IDAstar<true>(root, table.get_estimator(), is_solved<N>);
+  auto solutions = IDAstar<true>(root, wd_estimate, is_solved<N>);
   solutions.show();
 }
 
@@ -21,12 +28,14 @@ int main(int argc, const char *argv[]) {
   bool twophase = find_option("-2p", argc, argv);
 
   if (N == 3) {
+    load_fringe_table<3>(table3);
     if (fringe) {
       solve_fringe<3>(argv[argc - 1]);
     } else {
       solve<3>(argv[argc - 1]);
     }
   } else if (N == 4) {
+    load_fringe_table<4>(table4);
     if (fringe) {
       solve_fringe<4>(argv[argc - 1]);
     } else if (twophase) {
