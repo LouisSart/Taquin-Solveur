@@ -174,6 +174,25 @@ bool operator==(const Taquin<N> &t1, const Taquin<N> &t2) {
   return true;
 }
 
+template <unsigned N> auto compose(const Taquin<N> &t1, const Taquin<N> &t2) {
+  Taquin<N> ret;
+
+  auto ind = [](const unsigned &tile) {
+    if (tile == 0) {
+      return N * N - 1;
+    }
+    return tile - 1;
+  };
+
+  for (unsigned k = 0; k < N * N; ++k) {
+    ret[k] = t1[ind(t2[k])];
+    if (ret[k] == 0) {
+      ret.blank = k;
+    }
+  }
+  return ret;
+}
+
 template <unsigned N> bool is_solved(const Taquin<N> &t) {
   return t.is_solved();
 };

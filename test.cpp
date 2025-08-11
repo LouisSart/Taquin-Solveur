@@ -12,6 +12,10 @@ void test_transpose() {
   auto invariant = taquin.get_transposed().get_transposed();
 
   assert(taquin == invariant);
+
+  taquin = Taquin<4>().get_transposed();
+  invariant = compose(taquin, taquin);
+  assert(is_solved(invariant));
 }
 
 void test_possible_moves() {
