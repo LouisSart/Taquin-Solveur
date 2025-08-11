@@ -94,6 +94,5 @@ int main() {
   test_search();
   test_wd();
   test_fringe();
-
   return 0;
 }

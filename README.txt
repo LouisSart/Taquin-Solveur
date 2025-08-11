@@ -181,4 +181,3 @@ Table generated in 309.022
 
 TO DO:
 Use the fringe table to improve pruning in optimal solver
-Use symmetry conjugation in pruning table building to accelerate generation

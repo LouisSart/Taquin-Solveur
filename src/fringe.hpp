@@ -132,6 +132,15 @@ auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
         queue.push_front(child);
         ++counter;
       }
+
+      // The transposition conjugate of that position has to be
+      // at the same depth in the tree. Let's add it before generating it
+      // This makes almost no difference in terms of computation time
+      // unsigned t_index = fringe_index(transpose_conjugate(child));
+      // if (table[t_index] == UINT8_MAX) {
+      //   table[t_index] = depth + 1;
+      //   ++counter;
+      // }
     }
 
     queue.pop_back();
