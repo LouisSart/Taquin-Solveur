@@ -193,6 +193,11 @@ template <unsigned N> auto compose(const Taquin<N> &t1, const Taquin<N> &t2) {
   return ret;
 }
 
+template <unsigned N> auto transpose_conjugate(const Taquin<N> &taquin) {
+  auto transpose = Taquin<N>().get_transposed();
+  return compose(compose(transpose, taquin), transpose);
+}
+
 template <unsigned N> bool is_solved(const Taquin<N> &t) {
   return t.is_solved();
 };

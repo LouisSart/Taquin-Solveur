@@ -16,6 +16,15 @@ void test_transpose() {
   taquin = Taquin<4>().get_transposed();
   invariant = compose(taquin, taquin);
   assert(is_solved(invariant));
+
+  Taquin<4> A;
+  A.scramble();
+  auto C = transpose_conjugate(A);
+  auto T = Taquin<4>().get_transposed();
+
+  auto X = compose(T, A);
+  auto Y = compose(C, T);
+  assert(X == Y);
 }
 
 void test_possible_moves() {
