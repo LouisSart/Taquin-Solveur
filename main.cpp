@@ -10,12 +10,8 @@ template <unsigned N> void solve(std::string input) {
   auto wd_table = load_wd_table<N>();
 
   auto wd_estimate = wd_table.get_estimator();
-  auto estimator = [&wd_estimate](const Taquin<N> &t) {
-    return std::max(wd_estimate(t), fringe_estimate<N>(t));
-  };
 
   Taquin<N> taquin(input);
-  print(wd_estimate(taquin), fringe_estimate(taquin));
   taquin.show();
   auto root = make_root(taquin);
   auto solutions = IDAstar<true>(root, wd_estimate, is_solved<N>);

@@ -163,6 +163,23 @@ template <unsigned N> bool is_fringe_solved(const Taquin<N> &taquin) {
   return true;
 };
 
+template <unsigned N, bool verbose = false>
+auto fringe_table_statistics(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
+  std::array<unsigned, 70> distribution;
+  distribution.fill(0);
+
+  for (unsigned k : table) {
+    distribution[k] += 1;
+  }
+
+  if constexpr (verbose){
+    for(unsigned i = 0; i < distribution.size(); ++i){
+      std::cout << i << " " << distribution[i] << std::endl;;
+    }
+  }
+  return distribution;
+};
+
 std::array<uint8_t, Fringe<3>::TABLE_SIZE> table3;
 std::array<uint8_t, Fringe<4>::TABLE_SIZE> table4;
 
@@ -174,6 +191,7 @@ void load_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
 
   if (fs::exists(filename)) {
     load_binary(filename, table.data(), table.size());
+    // fringe_table_statistics<N, true>(table);
   } else {
     std::cout << "Pruning table not found, generating" << std::endl;
     generate_fringe_table<N>(table);
