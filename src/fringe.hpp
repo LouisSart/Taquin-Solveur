@@ -21,6 +21,13 @@ template <unsigned N> struct Fringe {
       return true;
     return false;
   }
+
+  static unsigned nth_fringe_tile(const unsigned &n) {
+    // return the global number of the nth fringe tile
+    if (n <= N) return n; // first row
+    else if (n == 2 * N) return 0; // blank is last
+    else return N * (n % N) + 1; // first column
+  }
 };
 
 template <unsigned N> unsigned permutation_index(const Taquin<N> &ft) {
@@ -55,6 +62,27 @@ template <unsigned N> unsigned layout_index(const Taquin<N> &ft) {
 
 template <unsigned N> unsigned fringe_index(const Taquin<N> &ft) {
   return layout_index(ft) * Fringe<N>::N_PERM + permutation_index(ft);
+}
+
+template<unsigned N> void taquin_from_index(const unsigned index, Taquin<N> &taquin) {
+  unsigned p_index = index % Fringe<N>::N_PERM;
+  unsigned l_index = index / Fringe<N>::N_PERM;
+
+  std::array<unsigned, N * N> layout;
+  layout_from_index(l_index, layout, 2 * N);
+  
+  std::array<unsigned, 2 * N> perm;
+  permutation_from_index(p_index, perm);
+
+  unsigned i = 0;
+  for (unsigned k = 0; k < N * N; ++k){
+    if (layout[k] == 1){
+      taquin[k] = Fringe<N>::nth_fringe_tile(perm[i]);
+      ++i;
+    } else {
+      taquin[k] = N * N;
+    }
+  }
 }
 
 template <unsigned N> std::deque<Taquin<N>> init_queue() {
@@ -92,15 +120,15 @@ std::vector<Taquin<N>> get_children(const Taquin<N> &taquin) {
 }
 
 template <unsigned N, bool verbose = false>
-auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
+auto generate_fringe_BFS(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsigned max_depth = 61) {
   assert(table.size() == Fringe<N>::TABLE_SIZE);
 
   unsigned counter, search_depth = 0;
   const auto start{std::chrono::steady_clock::now()};
 
   Taquin<N> root;
+  unsigned depth = 0;
   table.fill(UINT8_MAX);
-  table[fringe_index(root)] = 0;
   std::deque<Taquin<N>> queue = init_queue<N>();
   counter = queue.size();
 
@@ -108,11 +136,11 @@ auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
     table[fringe_index(root)] = 0;
   }
 
-  while (queue.size() > 0) {
+  while (queue.size() > 0 && depth <= max_depth) {
     auto taquin = queue.back();
     unsigned index = fringe_index(taquin);
     assert(index < Fringe<N>::TABLE_SIZE);
-    unsigned depth = table[index];
+    depth = table[index];
 
     if constexpr (verbose) {
       if (depth == search_depth) {
@@ -132,15 +160,6 @@ auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
         queue.push_front(child);
         ++counter;
       }
-
-      // The transposition conjugate of that position has to be
-      // at the same depth in the tree. Let's add it before generating it
-      // This makes almost no difference in terms of computation time
-      // unsigned t_index = fringe_index(transpose_conjugate(child));
-      // if (table[t_index] == UINT8_MAX) {
-      //   table[t_index] = depth + 1;
-      //   ++counter;
-      // }
     }
 
     queue.pop_back();
@@ -152,6 +171,19 @@ auto generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
     print("Table generated in", elapsed_seconds.count());
   }
 }
+
+// template <unsigned N, bool verbose = false>
+// void forward_scan_fringe(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsigned start_depth = 0, unsigned max_depth = 61) {
+//   unsigned depth = start_depth;
+
+
+// }
+
+template <unsigned N, bool verbose = false>
+void generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsigned max_depth = 61) {
+  generate_fringe_BFS<N>(table, 61);
+}
+
 
 template <unsigned N> bool is_fringe_solved(const Taquin<N> &taquin) {
   for (unsigned k = 0; k < Taquin<N>::N_TILES; ++k) {

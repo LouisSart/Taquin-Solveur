@@ -85,6 +85,8 @@ void test_fringe() {
   assert(!is_fringe_solved(t));
   assert(permutation_index(t) == 5927);
   assert(Fringe<4>::TABLE_SIZE == 518918400);
+  taquin_from_index(fringe_index(t), t);
+  assert(permutation_index(t) == 5927);
 }
 
 int main() {
