@@ -87,6 +87,15 @@ void test_fringe() {
   assert(Fringe<4>::TABLE_SIZE == 518918400);
   taquin_from_index(fringe_index(t), t);
   assert(permutation_index(t) == 5927);
+
+  Taquin<3> tt;
+  for (unsigned k = 0; k < Fringe<3>::TABLE_SIZE; ++k){
+    taquin_from_index(k, tt);
+    assert(fringe_index(tt) == k);
+  }
+
+  std::array<uint8_t, Fringe<3>::TABLE_SIZE> table;
+  generate_fringe_table<3, true>(table);
 }
 
 int main() {

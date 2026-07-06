@@ -2,6 +2,7 @@
 #include "taquin.hpp"
 #include "utils.hpp"
 #include <array>
+#include <algorithm> // std::all_of
 #include <cstdint>
 #include <deque>
 #include <iomanip>
@@ -78,6 +79,7 @@ template<unsigned N> void taquin_from_index(const unsigned index, Taquin<N> &taq
   for (unsigned k = 0; k < N * N; ++k){
     if (layout[k] == 1){
       taquin[k] = Fringe<N>::nth_fringe_tile(perm[i]);
+      if (taquin[k] == 0) taquin.blank = k;
       ++i;
     } else {
       taquin[k] = N * N;
@@ -120,15 +122,14 @@ std::vector<Taquin<N>> get_children(const Taquin<N> &taquin) {
 }
 
 template <unsigned N, bool verbose = false>
-auto generate_fringe_BFS(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsigned max_depth = 61) {
+auto generate_fringe_BFS(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsigned &counter, unsigned max_depth = 62) {
   assert(table.size() == Fringe<N>::TABLE_SIZE);
+  assert(std::all_of(table.begin(), table.end(), [](const unsigned &i){return i == UINT8_MAX;}));
 
-  unsigned counter, search_depth = 0;
-  const auto start{std::chrono::steady_clock::now()};
+  unsigned search_depth = 0;
 
   Taquin<N> root;
   unsigned depth = 0;
-  table.fill(UINT8_MAX);
   std::deque<Taquin<N>> queue = init_queue<N>();
   counter = queue.size();
 
@@ -136,7 +137,7 @@ auto generate_fringe_BFS(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsi
     table[fringe_index(root)] = 0;
   }
 
-  while (queue.size() > 0 && depth <= max_depth) {
+  while (queue.size() > 0 && search_depth < max_depth) {
     auto taquin = queue.back();
     unsigned index = fringe_index(taquin);
     assert(index < Fringe<N>::TABLE_SIZE);
@@ -144,7 +145,7 @@ auto generate_fringe_BFS(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsi
 
     if constexpr (verbose) {
       if (depth == search_depth) {
-        print(depth, counter, "/", Fringe<N>::TABLE_SIZE);
+        print("Depth", depth, ":", counter, "nodes");
         ++search_depth;
       }
     }
@@ -165,23 +166,107 @@ auto generate_fringe_BFS(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsi
     queue.pop_back();
   }
 
-  if constexpr (verbose) {
-    const auto end{std::chrono::steady_clock::now()};
-    const std::chrono::duration<double> elapsed_seconds{end - start};
-    print("Table generated in", elapsed_seconds.count());
+
+}
+
+template <unsigned N, bool verbose = false>
+void forward_scan_fringe(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsigned &counter, unsigned start_depth = 0, unsigned max_depth = 62) {
+  unsigned depth = start_depth;
+  Taquin<N> dummy;
+  while (depth < max_depth){
+    for (unsigned k = 0; k < Fringe<N>::TABLE_SIZE; ++k){
+      if (table[k] == depth - 1){
+        taquin_from_index(k, dummy);
+        auto children = get_children(dummy);
+        for (auto child : children) {
+          unsigned c = fringe_index(child);
+          if (table[c] == UINT8_MAX){
+            table[c] = depth;
+            ++counter;
+          }
+        }
+      }
+    }
+    if constexpr (verbose) print("Depth", depth, ":", counter, "nodes");
+    depth++;
   }
 }
 
-// template <unsigned N, bool verbose = false>
-// void forward_scan_fringe(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsigned start_depth = 0, unsigned max_depth = 61) {
-//   unsigned depth = start_depth;
-
-
-// }
+template <unsigned N, bool verbose = false>
+void backward_scan_fringe(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsigned &counter, unsigned start_depth = 0, unsigned max_depth = 62) {
+  unsigned depth = start_depth;
+  Taquin<N> dummy;
+  while (depth < max_depth){
+    for (unsigned k = 0; k < Fringe<N>::TABLE_SIZE; ++k){
+      if (table[k] == UINT8_MAX){
+        taquin_from_index(k, dummy);
+        auto children = get_children(dummy);
+        for (auto child : children) {
+          unsigned c = fringe_index(child);
+          if (table[c] == depth - 1){
+            table[k] = depth;
+            ++counter;
+            break;
+          }
+        }
+      }
+    }
+    if constexpr (verbose) print("Depth", depth, ":", counter, "nodes");
+    depth++;
+  }
+}
 
 template <unsigned N, bool verbose = false>
-void generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table, unsigned max_depth = 61) {
-  generate_fringe_BFS<N>(table, 61);
+void generate_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
+  // Generating the fringe table is done in three phases :
+  // BFS on the first few levels, forward scan in the middle part
+  // and finally a backward scan on the last few levels.
+  // It feels like the switch to forward scan doesn't make a great difference in 
+  // computation time.
+  // However the key part is to tune second switch at the level where 96%
+  // of the table entries are populated. This accelerates the process most
+  
+  unsigned first_switch, second_switch, max_depth;
+  if constexpr (N == 3){
+    first_switch = 20;
+    second_switch = 24;
+    max_depth = 29;
+  }
+  if constexpr (N == 4){
+    first_switch = 40;
+    second_switch = 47;
+    max_depth = 62;
+  }
+  
+  unsigned counter = 0;
+  const auto start{std::chrono::steady_clock::now()};
+  std::chrono::duration<double> elapsed_seconds;
+  table.fill(UINT8_MAX);
+
+  generate_fringe_BFS<N, verbose>(table, counter, first_switch);
+
+  if constexpr (verbose) {
+    elapsed_seconds = std::chrono::steady_clock::now() - start;
+    print("Duration", elapsed_seconds.count());
+    print("Switching to forward scan");
+  }
+
+  forward_scan_fringe<N, verbose>(table, counter, first_switch, second_switch);
+
+  if constexpr (verbose) {
+    elapsed_seconds = std::chrono::steady_clock::now() - start;
+    print("Duration", elapsed_seconds.count());
+    print("Switching to backward scan");
+  }
+
+  backward_scan_fringe<N, verbose>(table, counter, second_switch, max_depth);
+
+  if constexpr (verbose) {
+    elapsed_seconds = std::chrono::steady_clock::now() - start;
+    print("Table generated in", elapsed_seconds.count());
+  }
+
+  assert(std::all_of(table.begin(), table.end(), [](const unsigned &i){return i != UINT8_MAX;}));
 }
 
 
@@ -226,7 +311,7 @@ void load_fringe_table(std::array<uint8_t, Fringe<N>::TABLE_SIZE> &table) {
     // fringe_table_statistics<N, true>(table);
   } else {
     std::cout << "Pruning table not found, generating" << std::endl;
-    generate_fringe_table<N>(table);
+    generate_fringe_table<N, true>(table);
     fs::create_directories(table_dir);
     write_binary(filename, table.data(), table.size());
   }
